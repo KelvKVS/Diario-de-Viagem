@@ -1,0 +1,17 @@
+{
+  "name": "diario-de-viagem",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "dev" : "nodemon"
+  },
+  "keywords": [],
+  "author": "aaa",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
