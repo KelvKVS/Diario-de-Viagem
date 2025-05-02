@@ -1,9 +1,7 @@
-import express from 'express'
+const express = require('express');
+const userRoute = require('./src/routes/user.route'); 
+const app = express();
 
-const app = express()
+app.use('/soma', userRoute);
 
-app.get('/home', (req, res) => {
-  res.send('Testes q dmssss')
-})
-
-app.listen(3000)
+app.listen(3000);
