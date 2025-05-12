@@ -1,29 +1,21 @@
-import React, { useEffect } from 'react'
-import axios from 'axios'
+import React from 'react'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import Login from './pages/login'
+import Index from './pages/index'
+import NewPost from './pages/newpost'
+import NavBar from './assets/components/navbar'
 
 function App() {
-  const [data, setData] = React.useState(null)
-
-  useEffect(() => {
-    axios.get('/api/hello')
-      .then(response => {
-        setData(response.data)
-        console.log('Data fetched:', response.data)
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error)
-      })
-  }, []);
-
   return (
-    <>
-      <div className="container">
-        <h1>Vite + React + Bootstrap</h1>
-        <div className="alert alert-secondary" role="alert">
-          <p>"{data}" message from backend</p>
-        </div>
-      </div>
-    </>
+    <BrowserRouter>
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/newpost" element={<NewPost />} />
+        <Route path="*" element={<h1>404 Not Found</h1>} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
