@@ -33,6 +33,14 @@ function NavBar() {
             </li>
             <li className="nav-item">
               <Link
+                className={`nav-link ${location.pathname === '/userprofile' ? 'active fw-semibold text-primary' : 'text-dark'}`}
+                to="/userprofile"
+              >
+                Meu Perfil
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
                 className={`nav-link ${location.pathname === '/login' ? 'active fw-semibold text-primary' : 'text-dark'}`}
                 to="/login"
               >
