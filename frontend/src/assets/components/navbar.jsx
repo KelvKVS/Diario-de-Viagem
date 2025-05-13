@@ -7,7 +7,7 @@ function NavBar() {
     <nav className="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
       <div className="container-fluid px-4">
         <Link className="navbar-brand fw-bold text-dark" to="/">
-          Diário de Viagem
+          JJ
         </Link>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
