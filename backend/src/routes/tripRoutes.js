@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const viagemController = require('../controllers/tripController');
 
-// Buscar viagens com filtros
-router.get('/viagens', viagemController.getViagens);
+router.get('/trips', viagemController.getViagens);
 
 module.exports = router;

@@ -7,7 +7,7 @@ exports.getViagens = async (req, res) => {
     const filtros = {};
 
     if (local) {
-      filtros.local = new RegExp(local, 'i'); // Ex: "Paris"
+      filtros.local = new RegExp(local, 'i'); 
     }
 
     if (inicio && fim) {
@@ -17,7 +17,7 @@ exports.getViagens = async (req, res) => {
       };
     }
 
-    const viagens = await Viagem.find(filtros).populate('usuario'); // RELAÇÃO aqui
+    const viagens = await Viagem.find(filtros).populate('usuario'); 
     res.status(200).json(viagens);
   } catch (err) {
     res.status(500).json({ erro: 'Erro ao buscar viagens', detalhes: err });

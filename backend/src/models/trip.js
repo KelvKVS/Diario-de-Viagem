@@ -1,12 +1,11 @@
-// models/Viagem.js
 const mongoose = require('mongoose');
 
 const viagemSchema = new mongoose.Schema({
-  titulo: String,
-  descricao: String,
-  data: Date,
-  local: String,
-  imagem: String,
+  title: String,
+  description: String,
+  date: Date,
+  location: String,
+  image: String,
   visibilidade: {
     type: String,
     enum: ['publica', 'privada'],
