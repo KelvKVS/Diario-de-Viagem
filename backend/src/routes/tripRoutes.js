@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const viagemController = require('../controllers/tripController');
+const tripController = require('../controllers/tripController');
 
-router.get('/trips', viagemController.getViagens);
+router.post('/trips', tripController.createTrip);
+router.get('/trips', tripController.getTrips);
+router.post('/trips/:tripId/add-member', tripController.addMember);
 
 module.exports = router;

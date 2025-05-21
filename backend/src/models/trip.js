@@ -1,20 +1,12 @@
 const mongoose = require('mongoose');
 
-const viagemSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  date: Date,
-  location: String,
-  image: String,
-  visibilidade: {
-    type: String,
-    enum: ['publica', 'privada'],
-    default: 'privada',
-  },
-  usuario: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Usuario',
-  },
+const tripSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  isPublic: { type: Boolean, default: true },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+}, {
+  timestamps: true,
+  collection: 'trip' 
 });
 
-module.exports = mongoose.model('Viagem', viagemSchema);
+module.exports = mongoose.model('Trip', tripSchema);

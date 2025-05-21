@@ -1,25 +1,49 @@
-const Viagem = require('../models/trip.js');
+const Trip = require('../models/trip');
 
-exports.getViagens = async (req, res) => {
+exports.createTrip = async (req, res) => {
   try {
-    const { local, inicio, fim } = req.query;
+    const { name, isPublic, members } = req.body;
 
-    const filtros = {};
-
-    if (local) {
-      filtros.local = new RegExp(local, 'i'); 
+    if (!name || !Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Nome e pelo menos um membro são obrigatórios' });
     }
 
-    if (inicio && fim) {
-      filtros.data = {
-        $gte: new Date(inicio),
-        $lte: new Date(fim)
-      };
-    }
+    const trip = await Trip.create({
+      name,
+      isPublic: isPublic ?? true,
+      members,
+    });
 
-    const viagens = await Viagem.find(filtros).populate('usuario'); 
-    res.status(200).json(viagens);
+    res.status(201).json(trip);
   } catch (err) {
-    res.status(500).json({ erro: 'Erro ao buscar viagens', detalhes: err });
+    res.status(500).json({ error: 'Erro ao criar trip', details: err.message });
+  }
+};
+
+exports.getTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find().populate('members', 'name email');
+    res.status(200).json(trips);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar trips', details: err.message });
+  }
+};
+
+exports.addMember = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { userId } = req.body;
+
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ error: 'Trip não encontrada' });
+
+    if (!trip.members.includes(userId)) {
+      trip.members.push(userId);
+      await trip.save();
+    }
+
+    res.status(200).json(trip);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao adicionar membro', details: err.message });
   }
 };
