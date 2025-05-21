@@ -1,8 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const userController = require('../controllers/userController');
+const authController = require("../controllers/authController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-router.post('/users', userController.createUser);
-router.get('/users', userController.getUsuarios);
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+
+router.get("/usuarios-protegidos", authMiddleware, (req, res) => {
+  res.json({ message: `Bem-vindo, usuário ${req.userId}` });
+});
+
+router.get('/test', (req, res) => {
+  res.json({ message: 'Rota GET funcionando!' });
+});
+
 
 module.exports = router;

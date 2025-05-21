@@ -1,8 +1,8 @@
-const Usuario = require("../models/user");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const Usuario = require('../models/user');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-const SECRET = "your_jwt_secret";
+const SECRET = 'your_jwt_secret';
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -10,7 +10,7 @@ exports.register = async (req, res) => {
   try {
     const existingUser = await Usuario.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Usuário já existe" });
+      return res.status(400).json({ message: 'Usuário já existe' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -18,13 +18,13 @@ exports.register = async (req, res) => {
     const novoUsuario = new Usuario({
       name,
       email,
-      password: hashedPassword,
+      password: hashedPassword
     });
 
     await novoUsuario.save();
-    res.status(201).json({ message: "Usuário registrado com sucesso" });
+    res.status(201).json({ message: 'Usuário registrado com sucesso' });
   } catch (err) {
-    res.status(500).json({ error: "Erro no registro" });
+    res.status(500).json({ error: 'Erro no registro' });
   }
 };
 
@@ -34,20 +34,18 @@ exports.login = async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
-      return res.status(404).json({ message: "Usuário não encontrado" });
+      return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
     const senhaCorreta = await bcrypt.compare(password, usuario.password);
     if (!senhaCorreta) {
-      return res.status(401).json({ message: "Senha incorreta" });
+      return res.status(401).json({ message: 'Senha incorreta' });
     }
 
-    const token = jwt.sign({ userId: usuario._id }, SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ userId: usuario._id }, SECRET, { expiresIn: '1h' });
 
     res.status(200).json({ token });
   } catch (err) {
-    res.status(500).json({ error: "Erro no login" });
+    res.status(500).json({ error: 'Erro no login' });
   }
 };
