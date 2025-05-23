@@ -45,9 +45,6 @@ function Index() {
     return (
         <div className="container">
             <h1>Vite + React + Bootstrap</h1>
-            <div className="alert alert-secondary" role="alert">
-                <p>"{data}" message from backend</p>
-            </div>
             <main className="py-4">
                 <div className="container">
                     <div className="row justify-content-center">

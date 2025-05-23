@@ -12,7 +12,10 @@ function CreateTrip() {
   };
 
   return (
-    <div className="container mt-5">
+
+    
+
+    <div className="container mt-5" style={{ maxWidth: '600px'} }>
       <h2 className="mb-4">Criar Nova Viagem</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
@@ -24,6 +27,7 @@ function CreateTrip() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Viagem para o Rio"
+            
             required
           />
         </div>
