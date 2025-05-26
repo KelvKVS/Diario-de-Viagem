@@ -1,31 +1,38 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/login';
-import Index from './pages/index';
-import NewPost from './pages/newpost';
-import UserProfile from './pages/userprofile';
-import CreateTrip from './pages/createtrip';
-import Register from './pages/register';
-import Sidebar from './assets/components/Sidebar';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import Home from './pages/Home';
+import Index from './pages/Index';
+import Sidebar from './components/Sidebar';
+import ProtectedRoute from './components/ProtectedRoute';
+import '/src/assets/style/app.css';
+
+function AppContent() {
+  const location = useLocation();
+  const showSidebar = location.pathname !== '/';
+
+  return (
+    <div className="flex">
+      {showSidebar && <Sidebar />}
+      <main className={`flex-1 bg-gray-50 min-h-screen`}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/explorer" element={<h1 className="text-xl">Explorar Viagens</h1>} />
+          <Route path="/itineraries" element={<h1 className="text-xl">Roteiros</h1>} />
+          <Route path="/community" element={<h1 className="text-xl">Comunidade</h1>} />
+          <Route path="/groups" element={<h1 className="text-xl">Grupos</h1>} />
+          <Route path="/settings" element={<h1 className="text-xl">Configurações</h1>} />
+          <Route path="*" element={<h1 className="text-xl">404 Not Found</h1>} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
-    <div className="flex">
-      <Sidebar />
-      <div className="ml-60 p-6 w-full">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/newpost" element={<NewPost />} />
-          <Route path="/userprofile" element={<UserProfile />} />
-          <Route path="/nova-viagem" element={<CreateTrip />} />
-          <Route path="*" element={<h1>404 Not Found</h1>} />
-        </Routes>
-  </div>
-</div>
-
+      <AppContent />
     </BrowserRouter>
   );
 }

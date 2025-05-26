@@ -1,13 +1,10 @@
-node_modules
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+node_modules
 dist
 coverage
 *.log
 *.env
 *.local
 *.tsbuildinfo
-*.tgz
-*.zip
-*.tgz

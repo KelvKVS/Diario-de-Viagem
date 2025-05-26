@@ -7,7 +7,7 @@
 No diretório raiz do projeto, execute:
 
 ```bash
-cd backend && npm install && cd ../frontend && npm install && cd ..
+npm install && cd backend && npm install && cd ../frontend && npm install && cd ..
 ```
 
 ### 2. Iniciar o projeto
