@@ -26,7 +26,7 @@ exports.getposts = async (req, res) => {
       }
     }
 
-    const posts = await post.find(filtros).populate('usuario');
+    const posts = await post.find(filtros).populate('user');
     res.status(200).json(posts);
   } catch (err) {
     res.status(500).json({ erro: 'Erro ao buscar viagens', detalhes: err });

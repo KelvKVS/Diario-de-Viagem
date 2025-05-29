@@ -6,6 +6,7 @@ const userRoutes = require('./routes/userRoutes');
 const app = express();
 const port = 3000;
 const tripRoutes = require('./routes/tripRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 app.use(cors());
 app.use(express.json());
@@ -20,6 +21,8 @@ mongoose.connect('mongodb://localhost:27017/diarioViagem', {
 app.use('/', viagemRoutes);
 app.use('/', userRoutes);
 app.use('/', tripRoutes);
+app.use('/', commentRoutes);
+
 
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
