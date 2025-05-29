@@ -28,7 +28,7 @@ function Index() {
             }
 
             try {
-                const response = await fetch('/api/verify-token', {
+                const response = await fetch('/api/auth/verify-token', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -74,7 +74,7 @@ function Index() {
         }
 
         try {
-            const endpoint = isLogin ? '/api/login' : '/api/register';
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
             const body = isLogin ? 
                 { email, password } : 
                 { name, email, password };
