@@ -1,8 +1,8 @@
 const Usuario = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
-const SECRET = 'your_jwt_secret';
+const SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+const blacklist = new Set();
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -14,17 +14,12 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const novoUsuario = new Usuario({
-      name,
-      email,
-      password: hashedPassword
-    });
-
+    const novoUsuario = new Usuario({ name, email, password: hashedPassword });
     await novoUsuario.save();
+    
     res.status(201).json({ message: 'Usuário registrado com sucesso' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro no registro' });
+    res.status(500).json({ error: 'Erro no registro', details: err.message });
   }
 };
 
@@ -43,34 +38,26 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: usuario._id }, SECRET, { expiresIn: '1h' });
-
     res.status(200).json({ token });
   } catch (err) {
-    res.status(500).json({ error: 'Erro no login' });
+    res.status(500).json({ error: 'Erro no login', details: err.message });
   }
 };
 
-const blacklist = new Set();
-
 exports.logout = async (req, res) => {
   try {
-    // Get the token from the authorization header
     const token = req.headers.authorization?.split(' ')[1];
-    
     if (!token) {
       return res.status(401).json({ message: 'Token não fornecido' });
     }
 
-    // You could also add the token to a blacklist here if you want to invalidate it server-side
-    
+    blacklist.add(token);
     res.status(200).json({ message: 'Logout realizado com sucesso' });
   } catch (error) {
-    console.error('Erro no logout:', error);
-    res.status(500).json({ message: 'Erro interno no servidor' });
+    res.status(500).json({ message: 'Erro interno no servidor', error: error.message });
   }
 };
 
-// Middleware para verificar se o token está na lista negra
 exports.isTokenBlacklisted = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (blacklist.has(token)) {
@@ -81,25 +68,15 @@ exports.isTokenBlacklisted = (req, res, next) => {
 
 exports.verifyToken = async (req, res) => {
   try {
-    // Se chegou até aqui, significa que o token é válido (passou pelo authMiddleware)
     const userId = req.userId;
     const user = await Usuario.findById(userId).select('-password');
     
     if (!user) {
-      return res.status(404).json({ 
-        valid: false,
-        message: 'Usuário não encontrado' 
-      });
+      return res.status(404).json({ valid: false, message: 'Usuário não encontrado' });
     }
-
-    return res.status(200).json({ 
-      valid: true,
-      user: user 
-    });
+    
+    res.status(200).json({ valid: true, user });
   } catch (error) {
-    return res.status(500).json({ 
-      valid: false,
-      message: 'Erro ao verificar token' 
-    });
+    res.status(500).json({ valid: false, message: 'Erro ao verificar token', details: error.message });
   }
 };

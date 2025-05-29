@@ -14,9 +14,29 @@ exports.createTrip = async (req, res) => {
       members,
     });
 
+
+    
     res.status(201).json(trip);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao criar trip', details: err.message });
+    res.status(500).json({ error: 'Erro ao criar viagem', details: err.message });
+  }
+};
+
+exports.getUserTrips = async (req, res) => {
+  try {
+    const userId = req.userId; // Obtido do middleware de autenticação
+    
+    // Busca viagens onde o usuário é membro
+    const trips = await Trip.find({ members: userId })
+      .populate('members', 'name email photo')
+      .populate('admins', 'name email photo');
+    
+    res.status(200).json(trips);
+  } catch (err) {
+    res.status(500).json({ 
+      error: 'Erro ao buscar viagens do usuário', 
+      details: err.message 
+    });
   }
 };
 
@@ -25,7 +45,7 @@ exports.getTrips = async (req, res) => {
     const trips = await Trip.find().populate('members', 'name email');
     res.status(200).json(trips);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar trips', details: err.message });
+    res.status(500).json({ error: 'Erro ao buscar viagens', details: err.message });
   }
 };
 
@@ -35,7 +55,7 @@ exports.addMember = async (req, res) => {
     const { userId } = req.body;
 
     const trip = await Trip.findById(tripId);
-    if (!trip) return res.status(404).json({ error: 'Trip não encontrada' });
+    if (!trip) return res.status(404).json({ error: 'Viagem não encontrada' });
 
     if (!trip.members.includes(userId)) {
       trip.members.push(userId);
