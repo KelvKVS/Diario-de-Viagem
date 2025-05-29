@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   Compass,
@@ -44,10 +44,7 @@ function Sidebar() {
         <SidebarItem
           icon={LogOut}
           label="Sair"
-          onClick={() => {
-            localStorage.removeItem('authToken');
-            window.location.href = '/';
-          }}
+          to="/logout"
         />
       </div>
     </aside>

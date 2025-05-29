@@ -18,10 +18,10 @@ mongoose.connect('mongodb://localhost:27017/diarioViagem', {
 .then(() => console.log('✅ MongoDB conectado'))
 .catch(err => console.error('❌ Erro no MongoDB:', err));
 
-app.use('/', viagemRoutes);
-app.use('/', userRoutes);
-app.use('/', tripRoutes);
-app.use('/', commentRoutes);
+app.use('/api', viagemRoutes);
+app.use('/api', userRoutes);
+app.use('/api', tripRoutes);
+app.use('/api', commentRoutes);
 
 
 app.listen(port, () => {
