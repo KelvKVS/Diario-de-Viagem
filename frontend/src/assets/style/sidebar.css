@@ -1,0 +1,6 @@
+.sidebar {
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+    left: 0;
+}

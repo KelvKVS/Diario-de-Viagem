@@ -1,3 +1,4 @@
+
 import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -8,7 +9,8 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const token = localStorage.getItem('authToken');
+      // Use 'authToken' aqui também
+      const token = localStorage.getItem('authToken'); 
       
       if (!token) {
         setIsAuthenticated(false);
@@ -27,16 +29,13 @@ const ProtectedRoute = ({ children }) => {
           const data = await response.json();
           if (data.valid) {
             setIsAuthenticated(true);
-            // Opcionalmente, armazene os dados do usuário
             localStorage.setItem('userData', JSON.stringify(data.user));
           } else {
-            // Token inválido
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
             setIsAuthenticated(false);
           }
         } else {
-          // Token inválido ou expirado
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
           setIsAuthenticated(false);
@@ -61,7 +60,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // Redireciona para a raiz (página de login)
+    return <Navigate to="/" state={{ from: location }} replace />; 
   }
 
   return children;
