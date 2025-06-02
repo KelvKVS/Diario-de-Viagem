@@ -1,25 +1,33 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 const SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-module.exports = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({ message: 'Token não fornecido' });
-  }
-
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return res.status(401).json({ message: 'Token mal formatado' });
-  }
-
-  const token = parts[1];
-
+const authMiddleware = async (req, res, next) => {
   try {
+    // Get token from header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token não fornecido' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Verify token
     const decoded = jwt.verify(token, SECRET);
-    req.userId = decoded.userId;
+
+    // Get user from database
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Set user in request
+    req.user = user;
     next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token inválido' });
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ error: 'Token inválido' });
   }
 };
+
+module.exports = authMiddleware;
