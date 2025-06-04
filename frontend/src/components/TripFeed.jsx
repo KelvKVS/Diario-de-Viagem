@@ -1,0 +1,100 @@
+import React, { useState, useEffect } from 'react';
+import PostCard from './PostCard';
+import NewPostModal from './NewPostModal';
+import { Plus } from 'lucide-react';
+import PropTypes from 'prop-types';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+function TripFeed({ tripId }) {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showNewPostModal, setShowNewPostModal] = useState(false);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [tripId]);
+
+  const fetchPosts = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/api/posts/${tripId}/posts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar posts');
+      }
+
+      const data = await response.json();
+      setPosts(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePostCreated = (newPost) => {
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Posts da Viagem</h2>
+        <button
+          onClick={() => setShowNewPostModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Novo Post</span>
+        </button>
+      </div>
+
+      {posts.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          Nenhum post encontrado. Seja o primeiro a compartilhar algo sobre esta viagem!
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <PostCard key={post._id} post={post} />
+          ))}
+        </div>
+      )}
+
+      <NewPostModal
+        show={showNewPostModal}
+        onClose={() => setShowNewPostModal(false)}
+        tripId={tripId}
+        onPostCreated={handlePostCreated}
+      />
+    </div>
+  );
+}
+
+TripFeed.propTypes = {
+  tripId: PropTypes.string.isRequired
+};
+
+export default TripFeed; 

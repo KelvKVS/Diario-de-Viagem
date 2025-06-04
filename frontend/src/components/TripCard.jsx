@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Users, Calendar, Globe, Lock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -24,40 +25,42 @@ const TripCard = ({ trip }) => {
   console.log('Image URL:', getImageUrl(trip.coverImage));
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="relative h-48">
-        <img
-          src={getImageUrl(trip.coverImage)}
-          alt={trip.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            console.error('Image failed to load:', e);
-            e.target.src = '/placeholder-trip.jpg';
-          }}
-        />
-        <div className="absolute top-2 right-2">
-          {trip.isPublic ? (
-            <Globe className="w-6 h-6 text-blue-500" />
-          ) : (
-            <Lock className="w-6 h-6 text-gray-500" />
-          )}
-        </div>
-      </div>
-      
-      <div className="p-4">
-        <h3 className="text-xl font-semibold mb-2">{trip.name}</h3>
-        
-        <div className="flex items-center text-gray-600 mb-2">
-          <Calendar className="w-4 h-4 mr-2" />
-          <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
+    <Link to={`/trip/${trip._id}`} className="block">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer">
+        <div className="relative h-48">
+          <img
+            src={getImageUrl(trip.coverImage)}
+            alt={trip.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.error('Image failed to load:', e);
+              e.target.src = '/placeholder-trip.jpg';
+            }}
+          />
+          <div className="absolute top-2 right-2">
+            {trip.isPublic ? (
+              <Globe className="w-6 h-6 text-blue-500" />
+            ) : (
+              <Lock className="w-6 h-6 text-gray-500" />
+            )}
+          </div>
         </div>
         
-        <div className="flex items-center text-gray-600">
-          <Users className="w-4 h-4 mr-2" />
-          <span>{trip.members?.length || 0} membros</span>
+        <div className="p-4">
+          <h3 className="text-xl font-semibold mb-2">{trip.name}</h3>
+          
+          <div className="flex items-center text-gray-600 mb-2">
+            <Calendar className="w-4 h-4 mr-2" />
+            <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-600">
+            <Users className="w-4 h-4 mr-2" />
+            <span>{trip.members?.length || 0} membros</span>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

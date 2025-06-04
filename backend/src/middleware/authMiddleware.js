@@ -7,7 +7,10 @@ const authMiddleware = async (req, res, next) => {
     // Get token from header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token não fornecido' });
+      return res.status(401).json({ 
+        error: 'Token não fornecido',
+        message: 'É necessário fornecer um token de autenticação no formato Bearer'
+      });
     }
 
     const token = authHeader.split(' ')[1];
@@ -18,7 +21,10 @@ const authMiddleware = async (req, res, next) => {
     // Get user from database
     const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
-      return res.status(401).json({ error: 'Usuário não encontrado' });
+      return res.status(401).json({ 
+        error: 'Usuário não encontrado',
+        message: 'O usuário associado a este token não existe mais'
+      });
     }
 
     // Set user in request
@@ -26,7 +32,27 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    res.status(401).json({ error: 'Token inválido' });
+
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        error: 'Token expirado',
+        message: 'Sua sessão expirou. Por favor, faça login novamente.',
+        expiredAt: error.expiredAt
+      });
+    }
+
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        error: 'Token inválido',
+        message: 'O token fornecido é inválido ou mal formatado'
+      });
+    }
+
+    // Handle other unexpected errors
+    return res.status(500).json({
+      error: 'Erro de autenticação',
+      message: 'Ocorreu um erro ao processar sua autenticação'
+    });
   }
 };
 

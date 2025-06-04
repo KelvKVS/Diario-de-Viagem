@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import Home from './pages/Home';
 import Index from './pages/Index';
 import Explorer from './pages/Explorer';
+import TripPage from './pages/TripPage';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import '/src/assets/style/app.css';
@@ -38,6 +39,11 @@ function AppContent() {
           <Route path="/explorer" element={
             <ProtectedRoute>
               <Explorer />
+            </ProtectedRoute>
+          } />
+          <Route path="/trip/:tripId" element={
+            <ProtectedRoute>
+              <TripPage />
             </ProtectedRoute>
           } />
           {/* Adicione as rotas para os outros itens da sua Sidebar aqui, dentro de ProtectedRoute */}
