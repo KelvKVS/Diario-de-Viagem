@@ -42,7 +42,7 @@ function PostCard({ post }) {
       <div className="p-4 sm:p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-3">{post.title}</h2>
         <p className="text-gray-700 whitespace-pre-wrap break-words mb-4">{post.content}</p>
-
+        
         {post.location && (
           <div className="flex items-center gap-2 text-gray-500 mb-4">
             <MapPin className="w-4 h-4 flex-shrink-0" />
@@ -54,11 +54,11 @@ function PostCard({ post }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
             {post.images.map((image, index) => (
               <div key={index} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100">
-                <img
+              <img
                   src={`${API_URL}/uploads/${image}`}
-                  alt={`Post image ${index + 1}`}
+                alt={`Post image ${index + 1}`}
                   className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                />
+              />
               </div>
             ))}
           </div>
@@ -67,7 +67,7 @@ function PostCard({ post }) {
         {/* Footer */}
         <div className="flex items-center gap-4 text-gray-500 pt-4 border-t border-gray-100">
           <div className="flex items-center gap-1 hover:text-teal-500 transition-colors cursor-pointer">
-            <MessageCircle className="w-5 h-5" />
+          <MessageCircle className="w-5 h-5" />
             <span className="text-sm">{post.comments?.length || 0}</span>
           </div>
         </div>

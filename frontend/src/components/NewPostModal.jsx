@@ -28,7 +28,7 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
         formData.append('images', image);
       });
 
-      const response = await fetch(`${API_URL}/api/posts/${tripId}`, {
+      const response = await fetch(`${API_URL}/api/posts/${tripId}/posts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
