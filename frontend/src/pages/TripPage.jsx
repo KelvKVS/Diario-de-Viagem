@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TripFeed from '../components/TripFeed';
-import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft } from 'lucide-react';
+import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft, Settings, UserPlus, Trash2, Save, X } from 'lucide-react';
 import Modal from '../components/Modal';
+import AdminPanel from '../components/AdminPanel';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -15,6 +16,10 @@ function TripPage() {
   const [showMenu, setShowMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState('edit');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   useEffect(() => {
     fetchTripDetails();
@@ -36,7 +41,6 @@ function TripPage() {
       const data = await response.json();
       setTrip(data);
       
-      // Check if current user is an admin
       const userData = JSON.parse(localStorage.getItem('userData'));
       setIsAdmin(data.admins?.some(admin => admin._id === userData._id));
     } catch (err) {
@@ -46,11 +50,65 @@ function TripPage() {
     }
   };
 
+  const handleSaveTrip = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(trip)
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao salvar alterações');
+      }
+
+      const updatedTrip = await response.json();
+      setTrip(updatedTrip);
+      setIsAdminPanelOpen(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteTrip = async () => {
+    if (!confirm('Tem certeza que deseja excluir esta viagem? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao excluir viagem');
+      }
+
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+      setDeleting(false);
+    }
+  };
+
   const handleShare = () => {
     const shareUrl = `${window.location.origin}/trip/${tripId}`;
     navigator.clipboard.writeText(shareUrl);
     setShowShareModal(false);
-    // You could add a toast notification here
   };
 
   if (loading) {
@@ -61,7 +119,7 @@ function TripPage() {
     );
   }
 
-  if (error) {
+  if (error && !trip) {
     return (
       <div className="bg-red-50 text-red-700 p-4 rounded-lg m-4">
         {error}
@@ -79,9 +137,7 @@ function TripPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
       <div className="relative">
-        {/* Back Button - Fixed Position */}
         <div className="absolute top-4 left-4 z-10">
           <button
             onClick={() => navigate(-1)}
@@ -92,7 +148,6 @@ function TripPage() {
           </button>
         </div>
 
-        {/* Cover Image Section */}
         <div className="relative h-[50vh] min-h-[400px] bg-gray-900">
           <img
             src={trip.coverImage ? `${API_URL}${trip.coverImage}` : '/default-trip-cover.jpg'}
@@ -120,14 +175,6 @@ function TripPage() {
                     >
                       <Share2 className="w-5 h-5" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        onClick={() => navigate(`/trip/${tripId}/edit`)}
-                        className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                    )}
                     <div className="relative">
                       <button
                         onClick={() => setShowMenu(!showMenu)}
@@ -140,17 +187,28 @@ function TripPage() {
                           {isAdmin && (
                             <>
                               <button
-                                onClick={() => navigate(`/trip/${tripId}/members`)}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => {
+                                  setIsAdminPanelOpen(true);
+                                  setActiveTab('edit');
+                                  setShowMenu(false);
+                                }}
+                                className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
-                                Gerenciar Membros
+                                <Edit className="w-4 h-4" />
+                                Editar Viagem
                               </button>
                               <button
-                                onClick={() => navigate(`/trip/${tripId}/settings`)}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => {
+                                  setIsAdminPanelOpen(true);
+                                  setActiveTab('settings');
+                                  setShowMenu(false);
+                                }}
+                                className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
+                                <Settings className="w-4 h-4" />
                                 Configurações
                               </button>
+                              <hr className="my-1" />
                             </>
                           )}
                           <button
@@ -172,9 +230,7 @@ function TripPage() {
         </div>
       </div>
 
-      {/* Main Content Section */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Trip Info Cards */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center gap-3">
@@ -211,13 +267,30 @@ function TripPage() {
           </div>
         </div>
 
-        {/* Trip Feed */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <TripFeed tripId={tripId} />
         </div>
       </div>
 
-      {/* Share Modal */}
+      <AdminPanel
+        isOpen={isAdminPanelOpen}
+        onClose={() => setIsAdminPanelOpen(false)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        trip={trip}
+        onSave={handleSaveTrip}
+        onDelete={handleDeleteTrip}
+        isSaving={saving}
+        isDeleting={deleting}
+        error={error}
+        onTripChange={(field, value) => {
+          setTrip(prev => ({
+            ...prev,
+            [field]: value
+          }));
+        }}
+      />
+
       <Modal
         show={showShareModal}
         onClose={() => setShowShareModal(false)}
