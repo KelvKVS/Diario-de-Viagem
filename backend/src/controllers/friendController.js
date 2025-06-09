@@ -41,3 +41,27 @@ exports.acceptFriendRequest = async (req, res) => {
 
   res.status(200).json({ message: 'Amizade aceita' });
 };
+
+exports.getFriends = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('friends', 'username email');
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    res.status(200).json(user.friends);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar amigos' });
+  }
+};
+
+exports.getPendingRequests = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('friendRequests', 'username email');
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    res.status(200).json(user.friendRequests);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar solicitações pendentes' });
+  }
+};
