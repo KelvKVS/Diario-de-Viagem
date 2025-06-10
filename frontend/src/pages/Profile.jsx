@@ -34,16 +34,15 @@ const Profile = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     bio: '',
     location: ''
   });
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -86,17 +85,6 @@ const Profile = () => {
       fetchUserPosts();
     }
   }, [userId]);
-
-  useEffect(() => {
-    if (userData) {
-      setEditForm({
-        name: userData.name || '',
-        email: userData.email || '',
-        bio: userData.bio || '',
-        location: userData.location || ''
-      });
-    }
-  }, [userData]);
 
   const fetchFriends = async () => {
     try {
@@ -193,51 +181,49 @@ const Profile = () => {
     }
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.put('/api/users/profile', editForm);
-      setUserData(response.data);
-      setIsEditing(false);
-      showToast('Perfil atualizado com sucesso!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      showToast(error.response?.data?.message || 'Erro ao atualizar perfil', 'error');
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfilePhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+        setShowPreviewModal(true);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
 
-    // Validar tipo e tamanho do arquivo
-    if (!file.type.startsWith('image/')) {
-      showToast('Por favor, selecione uma imagem válida', 'error');
-      return;
-    }
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'success' });
+  };
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB
-      showToast('A imagem deve ter no máximo 5MB', 'error');
-      return;
-    }
+  const handlePhotoUpload = async () => {
+    if (!profilePhoto) return;
 
+    setUploadLoading(true);
     const formData = new FormData();
-    formData.append('profilePhoto', file);
-
-    setIsUploading(true);
-    setUploadProgress(0);
+    formData.append('profilePhoto', profilePhoto);
 
     try {
-      const response = await api.post('/api/users/profile/photo', formData, {
+      const response = await api.post('/api/users/profile-photo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(progress);
         }
       });
-
+      
       if (response.data.user) {
         setUserData(prev => ({
           ...prev,
@@ -252,8 +238,20 @@ const Profile = () => {
       console.error('Error uploading photo:', error);
       showToast(error.response?.data?.message || 'Erro ao fazer upload da foto', 'error');
     } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      setUploadLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.put('/api/users/profile', formData);
+      setUserData(response.data);
+      setEditMode(false);
+      showToast('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showToast(error.response?.data?.message || 'Erro ao atualizar perfil', 'error');
     }
   };
 
@@ -262,14 +260,6 @@ const Profile = () => {
     if (photoPath.startsWith('http')) return photoPath;
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     return `${baseUrl}${photoPath}`;
-  };
-
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-  };
-
-  const hideToast = () => {
-    setToast({ show: false, message: '', type: 'success' });
   };
 
   if (!userId || loading) {
@@ -311,7 +301,7 @@ const Profile = () => {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleImageUpload}
+              onChange={handlePhotoChange}
             />
           </div>
         </div>
@@ -331,7 +321,7 @@ const Profile = () => {
                 </p>
               </div>
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={() => setEditMode(true)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 title="Editar perfil"
               >
@@ -491,18 +481,18 @@ const Profile = () => {
 
       {/* Modals */}
       <Modal
-        show={isEditing}
-        onClose={() => setIsEditing(false)}
+        show={editMode}
+        onClose={() => setEditMode(false)}
         title="Editar Perfil"
       >
         <div className="p-4">
-          <form onSubmit={handleEditSubmit} className="space-y-4">
+          <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 label="Nome"
                 name="name"
-                value={editForm.name}
-                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                value={formData.name}
+                onChange={handleInputChange}
                 required
                 icon={<User className="w-5 h-5 text-gray-400" />}
               />
@@ -510,8 +500,8 @@ const Profile = () => {
                 label="Email"
                 name="email"
                 type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                value={formData.email}
+                onChange={handleInputChange}
                 required
                 icon={<Mail className="w-5 h-5 text-gray-400" />}
               />
@@ -520,22 +510,22 @@ const Profile = () => {
               label="Bio"
               name="bio"
               type="textarea"
-              value={editForm.bio}
-              onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+              value={formData.bio}
+              onChange={handleInputChange}
               rows="3"
               icon={<UserCircle className="w-5 h-5 text-gray-400" />}
             />
             <FormField
               label="Localização"
               name="location"
-              value={editForm.location}
-              onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+              value={formData.location}
+              onChange={handleInputChange}
               icon={<MapPin className="w-5 h-5 text-gray-400" />}
             />
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
-                onClick={() => setIsEditing(false)}
+                onClick={() => setEditMode(false)}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
               >
                 <X className="w-5 h-5" />
@@ -582,14 +572,11 @@ const Profile = () => {
               Cancelar
             </button>
             <button
-              onClick={() => {
-                setShowPreviewModal(false);
-                setProfilePhoto(null);
-                setPreviewUrl(null);
-              }}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              onClick={handlePhotoUpload}
+              disabled={uploadLoading}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
             >
-              Confirmar e Enviar
+              {uploadLoading ? 'Enviando...' : 'Confirmar e Enviar'}
             </button>
           </div>
         </div>
@@ -695,26 +682,6 @@ const Profile = () => {
           )}
         </div>
       </Modal>
-
-      {/* Photo Upload Modal */}
-      {isUploading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-4">Enviando Foto</h3>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                <div
-                  className="bg-teal-600 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600">
-                {uploadProgress}% concluído
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast Notification */}
       {toast.show && (

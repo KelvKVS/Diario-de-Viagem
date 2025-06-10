@@ -56,8 +56,7 @@ exports.acceptFriendRequest = async (req, res) => {
 
 exports.getFriends = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId)
-      .populate('friends', 'name email avatar');
+    const user = await User.findById(req.params.userId).populate('friends', 'username email');
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
@@ -69,8 +68,7 @@ exports.getFriends = async (req, res) => {
 
 exports.getPendingRequests = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId)
-      .populate('friendRequests', 'name email avatar');
+    const user = await User.findById(req.params.userId).populate('friendRequests', 'username email');
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
