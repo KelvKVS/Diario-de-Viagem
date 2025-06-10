@@ -151,3 +151,20 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({ error: 'Erro ao deletar post' });
   }
 };
+
+// Get posts by user
+exports.getUserPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const posts = await Post.find({ author: userId })
+      .populate('author', 'name email avatar')
+      .populate('comments.author', 'name email avatar')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error('Error getting user posts:', error);
+    res.status(500).json({ error: 'Erro ao buscar posts do usuário' });
+  }
+};

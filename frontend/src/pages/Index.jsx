@@ -10,6 +10,8 @@ import {
     Briefcase
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Index() {
     const navigate = useNavigate();
     const [isLogin, setIsLogin] = useState(true);
@@ -28,7 +30,7 @@ function Index() {
             }
 
             try {
-                const response = await fetch('/api/auth/verify-token', {
+                const response = await fetch(`${API_URL}/api/auth/verify-token`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -74,7 +76,7 @@ function Index() {
         }
 
         try {
-            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
             const body = isLogin ? 
                 { email, password } : 
                 { name, email, password };

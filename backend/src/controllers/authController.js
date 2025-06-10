@@ -89,28 +89,12 @@ exports.isTokenBlacklisted = (req, res, next) => {
 
 exports.verifyToken = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ valid: false, error: 'Token não fornecido' });
-    }
-
-    const decoded = jwt.verify(token, SECRET);
-    const user = await Usuario.findById(decoded.userId).select('-password');
-    
+    const user = await Usuario.findById(req.userId).select('-password');
     if (!user) {
-      return res.status(404).json({ valid: false, error: 'Usuário não encontrado' });
+      return res.status(404).json({ valid: false, message: "Usuário não encontrado" });
     }
-    
-    res.status(200).json({ 
-      valid: true, 
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email
-      }
-    });
-  } catch (error) {
-    console.error('Token verification error:', error);
-    res.status(401).json({ valid: false, error: 'Token inválido' });
+    res.json({ valid: true, user });
+  } catch (err) {
+    res.status(500).json({ valid: false, message: "Erro ao verificar token" });
   }
 };

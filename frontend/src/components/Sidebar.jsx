@@ -63,13 +63,12 @@ function Sidebar() {
           <SidebarItem icon={Compass} label="Explorar" to="/explorer" /> {/* Ajustado para uma rota mais lógica */}
           <SidebarItem icon={MapPin} label="Roteiros" to="/itineraries" />
           <SidebarItem icon={MessageCircle} label="Comunidade" to="/community" />
-          <SidebarItem icon={Users} label="Amigos" to="/friends" />
         </nav>
       </div>
 
       {/* Rodapé (alterações apenas na lógica do botão Sair e adição de logs) */}
       <div className="p-4 border-t border-gray-100">
-        <SidebarItem icon={CircleUserRound} label="Perfil" to="/perfil" />
+        <SidebarItem icon={CircleUserRound} label="Perfil" to="/profile" />
         <SidebarItem icon={Settings} label="Configurações" to="/settings" />
 
         {/* Item "Sair" - Abre o modal */}

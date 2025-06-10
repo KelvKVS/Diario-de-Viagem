@@ -34,6 +34,9 @@ router.use(authMiddleware);
 // Get posts for a trip
 router.get('/:tripId/posts', postController.getTripPosts);
 
+// Get posts by user
+router.get('/user/:userId', postController.getUserPosts);
+
 // Create a new post with file upload
 router.post('/:tripId/posts', upload, postController.createPost);
 

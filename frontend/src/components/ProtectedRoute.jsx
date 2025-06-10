@@ -1,6 +1,7 @@
-
 import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
@@ -9,7 +10,6 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      // Use 'authToken' aqui também
       const token = localStorage.getItem('authToken'); 
       
       if (!token) {
@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        const response = await fetch('/api/auth/verify-token', {
+        const response = await fetch(`${API_URL}/api/auth/verify-token`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -60,7 +60,6 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Redireciona para a raiz (página de login)
     return <Navigate to="/" state={{ from: location }} replace />; 
   }
 

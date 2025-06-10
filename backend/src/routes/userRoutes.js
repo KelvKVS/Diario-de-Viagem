@@ -3,6 +3,8 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const friendController = require("../controllers/friendController");
+const userController = require("../controllers/userController");
+const upload = require("../middleware/uploadMiddleware");
 
 // Autenticação
 router.post("/register", authController.register);
@@ -17,6 +19,12 @@ router.post("/accept-request", authMiddleware, friendController.acceptFriendRequ
 router.post("/reject-request", authMiddleware, friendController.rejectFriendRequest);
 router.get("/friends/:userId", authMiddleware, friendController.getFriends); 
 router.get("/requests/:userId", authMiddleware, friendController.getPendingRequests); 
+
+// Upload de foto de perfil
+router.post("/profile-photo", authMiddleware, upload, userController.uploadProfilePhoto);
+
+// Atualização de perfil
+router.put("/profile", authMiddleware, userController.updateProfile);
 
 // Rotas protegidas de teste
 router.get("/usuarios-protegidos", authMiddleware, (req, res) => {

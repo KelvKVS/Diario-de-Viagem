@@ -101,7 +101,7 @@ exports.searchUsers = async (req, res) => {
         { email: searchRegex }
       ],
       _id: { $ne: currentUserId } // Exclui o usuário atual
-    }).select('name email'); // Seleciona apenas campos necessários
+    }).select('name email profilePhoto'); // Adicionado profilePhoto aos campos selecionados
 
     // Filtra os resultados para excluir amigos e solicitações pendentes
     const filteredUsers = users.filter(user => 

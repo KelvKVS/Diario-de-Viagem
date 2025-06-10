@@ -4,7 +4,7 @@ import Home from './pages/Home';
 import Index from './pages/Index';
 import Explorer from './pages/Explorer';
 import TripPage from './pages/TripPage';
-import Friends from './pages/Friends';
+import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import '/src/assets/style/app.css';
@@ -18,7 +18,6 @@ function LogoutRoute() {
   return <Navigate to="/" replace />; 
 }
 
-
 function AppContent() {
   const location = useLocation();
   const showSidebar = location.pathname !== '/'; 
@@ -29,9 +28,7 @@ function AppContent() {
       <main className={`flex-1 bg-gray-50 min-h-screen`}>
         <Routes>
           <Route path="/" element={<Index />} />
-
           <Route path="/logout" element={<LogoutRoute />} />
-        
           <Route path="/home" element={
             <ProtectedRoute>
               <Home />
@@ -47,7 +44,6 @@ function AppContent() {
               <TripPage />
             </ProtectedRoute>
           } />
-          {/* Adicione as rotas para os outros itens da sua Sidebar aqui, dentro de ProtectedRoute */}
           <Route path="/itineraries" element={
             <ProtectedRoute>
               <h1 className="text-xl">Roteiros</h1>
@@ -58,9 +54,9 @@ function AppContent() {
               <h1 className="text-xl">Comunidade</h1>
             </ProtectedRoute>
           } />
-          <Route path="/friends" element={
+          <Route path="/profile" element={
             <ProtectedRoute>
-              <Friends />
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="/settings" element={
@@ -68,15 +64,6 @@ function AppContent() {
               <h1 className="text-xl">Configurações</h1>
             </ProtectedRoute>
           } />
-          {/* Se você tiver uma rota para "Perfil" na Sidebar: */}
-          <Route path="/perfil" element={
-            <ProtectedRoute>
-              <h1 className="text-xl">Perfil</h1> {/* Ou seu componente de perfil */}
-            </ProtectedRoute>
-          } />
-          
-          {/* Rota catch-all: Se o usuário tentar acessar uma URL que não existe ou
-              que não é uma rota pública, redireciona para a página de login (Index). */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -84,7 +71,6 @@ function AppContent() {
   );
 }
 
-// Componente App (wrapper para BrowserRouter)
 function App() {
   return (
     <BrowserRouter>
