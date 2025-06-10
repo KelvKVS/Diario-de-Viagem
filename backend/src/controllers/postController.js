@@ -78,6 +78,7 @@ exports.getTripPosts = async (req, res) => {
 
     const posts = await Post.find({ trip: tripId })
       .populate('author', 'name email avatar')
+      .populate('trip', 'name')
       .populate('comments.author', 'name email avatar')
       .sort({ createdAt: -1 });
 
@@ -159,6 +160,7 @@ exports.getUserPosts = async (req, res) => {
 
     const posts = await Post.find({ author: userId })
       .populate('author', 'name email avatar')
+      .populate('trip', 'name')
       .populate('comments.author', 'name email avatar')
       .sort({ createdAt: -1 });
 

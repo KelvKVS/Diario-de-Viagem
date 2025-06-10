@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MapPin, MessageCircle, Clock } from 'lucide-react';
+import { MapPin, MessageCircle, Clock, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -28,7 +29,18 @@ function PostCard({ post }) {
           />
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <h3 className="font-semibold text-gray-900 truncate">{post.author.name}</h3>
+              <div>
+                <h3 className="font-semibold text-gray-900 truncate">{post.author.name}</h3>
+                {post.trip && (
+                  <Link 
+                    to={`/trip/${post.trip._id}`}
+                    className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>{post.trip.name}</span>
+                  </Link>
+                )}
+              </div>
               <div className="flex items-center gap-1 text-sm text-gray-500">
                 <Clock className="w-4 h-4" />
                 <span>{formatDate(post.createdAt)}</span>
@@ -54,11 +66,11 @@ function PostCard({ post }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
             {post.images.map((image, index) => (
               <div key={index} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-100">
-              <img
+                <img
                   src={`${API_URL}/uploads/${image}`}
-                alt={`Post image ${index + 1}`}
+                  alt={`Post image ${index + 1}`}
                   className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-              />
+                />
               </div>
             ))}
           </div>
@@ -67,7 +79,7 @@ function PostCard({ post }) {
         {/* Footer */}
         <div className="flex items-center gap-4 text-gray-500 pt-4 border-t border-gray-100">
           <div className="flex items-center gap-1 hover:text-teal-500 transition-colors cursor-pointer">
-          <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-5 h-5" />
             <span className="text-sm">{post.comments?.length || 0}</span>
           </div>
         </div>
@@ -86,6 +98,10 @@ PostCard.propTypes = {
       name: PropTypes.string.isRequired,
       avatar: PropTypes.string
     }).isRequired,
+    trip: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired
+    }),
     location: PropTypes.string,
     images: PropTypes.arrayOf(PropTypes.string),
     comments: PropTypes.array,
