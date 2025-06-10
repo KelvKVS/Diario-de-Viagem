@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TripFeed from '../components/TripFeed';
-import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft, Settings, UserPlus, Trash2, Save, X } from 'lucide-react';
+import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft, Settings, UserPlus, Trash2, Save, X, Bell } from 'lucide-react';
 import Modal from '../components/Modal';
 import AdminPanel from '../components/AdminPanel';
+import Toast from '../components/Toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -20,6 +21,7 @@ function TripPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchTripDetails();
@@ -45,6 +47,7 @@ function TripPage() {
       setIsAdmin(data.admins?.some(admin => admin._id === userData._id));
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -71,8 +74,10 @@ function TripPage() {
       const updatedTrip = await response.json();
       setTrip(updatedTrip);
       setIsAdminPanelOpen(false);
+      showToast('Viagem atualizada com sucesso!');
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -98,9 +103,11 @@ function TripPage() {
         throw new Error('Erro ao excluir viagem');
       }
 
+      showToast('Viagem excluída com sucesso!');
       navigate('/');
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
       setDeleting(false);
     }
   };
@@ -109,6 +116,15 @@ function TripPage() {
     const shareUrl = `${window.location.origin}/trip/${tripId}`;
     navigator.clipboard.writeText(shareUrl);
     setShowShareModal(false);
+    showToast('Link copiado para a área de transferência!');
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'success' });
   };
 
   if (loading) {
@@ -231,44 +247,109 @@ function TripPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Data</p>
-                <p className="font-medium">
-                  {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <Users className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Membros</p>
-                <p className="font-medium">{trip.members?.length || 0} participantes</p>
-              </div>
-            </div>
-            {trip.location && (
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <MapPin className="w-6 h-6 text-purple-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <Calendar className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Data</p>
+                    <p className="font-medium">
+                      {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Localização</p>
-                  <p className="font-medium">{trip.location}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <TripFeed tripId={tripId} />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <Users className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Membros</p>
+                    <p className="font-medium">{trip.members?.length || 0} participantes</p>
+                  </div>
+                </div>
+
+                {trip.location && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                      <MapPin className="w-6 h-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Localização</p>
+                      <p className="font-medium">{trip.location}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Membros
+                </h2>
+                {isAdmin && (
+                  <button
+                    onClick={() => {/* TODO: Implement member management */}}
+                    className="text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Adicionar</span>
+                  </button>
+                )}
+              </div>
+              <div className="space-y-3">
+                {trip.members?.slice(0, 5).map((member) => (
+                  <div
+                    key={member._id}
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={member.avatar ? `${API_URL}${member.avatar}` : '/default-avatar.png'}
+                        alt={member.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/default-avatar.png';
+                        }}
+                      />
+                      <div>
+                        <h3 className="font-medium text-sm">{member.name}</h3>
+                        <p className="text-gray-500 text-xs">{member.email}</p>
+                      </div>
+                    </div>
+                    {trip.admins?.some(admin => admin._id === member._id) && (
+                      <span className="text-xs text-blue-500">Admin</span>
+                    )}
+                  </div>
+                ))}
+                {trip.members?.length > 5 && (
+                  <button
+                    onClick={() => {/* TODO: Implement view all members */}}
+                    className="w-full text-center text-blue-500 hover:text-blue-600 text-sm py-2"
+                  >
+                    Ver todos os {trip.members.length} membros
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                Posts da Viagem
+              </h2>
+              <TripFeed tripId={tripId} />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -316,6 +397,14 @@ function TripPage() {
           </div>
         </div>
       </Modal>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }

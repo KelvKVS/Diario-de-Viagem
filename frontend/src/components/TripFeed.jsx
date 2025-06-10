@@ -3,6 +3,7 @@ import PostCard from './PostCard';
 import NewPostModal from './NewPostModal';
 import { Plus } from 'lucide-react';
 import PropTypes from 'prop-types';
+import Toast from './Toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -11,6 +12,7 @@ function TripFeed({ tripId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showNewPostModal, setShowNewPostModal] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchPosts();
@@ -30,16 +32,39 @@ function TripFeed({ tripId }) {
       }
 
       const data = await response.json();
-      setPosts(data);
+      // Ensure posts are sorted by creation date (newest first)
+      const sortedPosts = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setPosts(sortedPosts);
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePostCreated = (newPost) => {
+    // Ensure the new post has all required fields
+    if (!newPost.author || !newPost.author.name) {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      newPost.author = {
+        _id: userData._id,
+        name: userData.name,
+        avatar: userData.avatar
+      };
+    }
+    
+    // Add the new post at the beginning of the list
     setPosts(prev => [newPost, ...prev]);
+    showToast('Post criado com sucesso!');
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'success' });
   };
 
   if (loading) {
@@ -89,6 +114,14 @@ function TripFeed({ tripId }) {
         tripId={tripId}
         onPostCreated={handlePostCreated}
       />
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }
