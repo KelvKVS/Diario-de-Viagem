@@ -11,8 +11,10 @@ router.post("/logout", authMiddleware, authController.logout);
 router.get("/verify-token", authMiddleware, authController.verifyToken);
 
 // Sistema de Amizades
+router.get("/search", authMiddleware, friendController.searchUsers);
 router.post("/send-request", authMiddleware, friendController.sendFriendRequest);
 router.post("/accept-request", authMiddleware, friendController.acceptFriendRequest);
+router.post("/reject-request", authMiddleware, friendController.rejectFriendRequest);
 router.get("/friends/:userId", authMiddleware, friendController.getFriends); 
 router.get("/requests/:userId", authMiddleware, friendController.getPendingRequests); 
 

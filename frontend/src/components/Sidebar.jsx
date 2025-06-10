@@ -63,7 +63,7 @@ function Sidebar() {
           <SidebarItem icon={Compass} label="Explorar" to="/explorer" /> {/* Ajustado para uma rota mais lógica */}
           <SidebarItem icon={MapPin} label="Roteiros" to="/itineraries" />
           <SidebarItem icon={MessageCircle} label="Comunidade" to="/community" />
-          <SidebarItem icon={Users} label="Grupos" to="/groups" />
+          <SidebarItem icon={Users} label="Amigos" to="/friends" />
         </nav>
       </div>
 

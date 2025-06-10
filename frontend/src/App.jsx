@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Index from './pages/Index';
 import Explorer from './pages/Explorer';
 import TripPage from './pages/TripPage';
+import Friends from './pages/Friends';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import '/src/assets/style/app.css';
@@ -57,9 +58,9 @@ function AppContent() {
               <h1 className="text-xl">Comunidade</h1>
             </ProtectedRoute>
           } />
-          <Route path="/groups" element={
+          <Route path="/friends" element={
             <ProtectedRoute>
-              <h1 className="text-xl">Grupos</h1>
+              <Friends />
             </ProtectedRoute>
           } />
           <Route path="/settings" element={
