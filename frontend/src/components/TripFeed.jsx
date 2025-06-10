@@ -50,7 +50,7 @@ function TripFeed({ tripId }) {
       newPost.author = {
         _id: userData._id,
         name: userData.name,
-        avatar: userData.avatar
+        profilePhoto: userData.profilePhoto
       };
     }
     

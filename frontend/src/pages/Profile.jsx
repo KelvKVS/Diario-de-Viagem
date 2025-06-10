@@ -380,7 +380,10 @@ const Profile = () => {
                     />
                     <div>
                       <h3 className="font-medium text-sm">{friend.name}</h3>
-                      <p className="text-gray-500 text-xs">{friend.email}</p>
+                      <p className="text-gray-500 text-xs flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span>Amigo</span>
+                      </p>
                     </div>
                   </div>
                   <button
@@ -427,7 +430,10 @@ const Profile = () => {
                       />
                       <div>
                         <h3 className="font-medium text-sm">{request.name}</h3>
-                        <p className="text-gray-500 text-xs">{request.email}</p>
+                        <p className="text-gray-500 text-xs flex items-center gap-1">
+                          <UserPlus className="w-3 h-3" />
+                          <span>Solicitação pendente</span>
+                        </p>
                       </div>
                     </div>
                     <div className="flex gap-2">

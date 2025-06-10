@@ -46,7 +46,7 @@ exports.createPost = async (req, res) => {
     await post.save();
 
     // Populate author information
-    await post.populate('author', 'username email profilePicture');
+    await post.populate('author', 'name email profilePhoto');
 
     res.status(201).json({ post });
   } catch (error) {
@@ -77,11 +77,25 @@ exports.getTripPosts = async (req, res) => {
     }
 
     const posts = await Post.find({ trip: tripId })
-      .populate('author', 'name email avatar')
-      .populate('comments.author', 'name email avatar')
+      .populate({
+        path: 'author',
+        select: 'name email profilePhoto'
+      })
+      .populate({
+        path: 'comments.author',
+        select: 'name email profilePhoto'
+      })
       .sort({ createdAt: -1 });
 
-    res.status(200).json(posts);
+    // Add role information to each post's author
+    const postsWithRoles = posts.map(post => {
+      const postObj = post.toObject();
+      const isAdmin = trip.admins.includes(post.author._id);
+      postObj.author.role = isAdmin ? 'Administrador' : 'Membro';
+      return postObj;
+    });
+
+    res.status(200).json(postsWithRoles);
   } catch (error) {
     console.error('Error getting posts:', error);
     res.status(500).json({ error: 'Erro ao buscar posts' });
@@ -111,7 +125,7 @@ exports.addComment = async (req, res) => {
     });
 
     await post.save();
-    await post.populate('comments.author', 'name email avatar');
+    await post.populate('comments.author', 'name email profilePhoto');
 
     res.status(200).json(post);
   } catch (error) {
@@ -158,8 +172,8 @@ exports.getUserPosts = async (req, res) => {
     const { userId } = req.params;
 
     const posts = await Post.find({ author: userId })
-      .populate('author', 'name email avatar')
-      .populate('comments.author', 'name email avatar')
+      .populate('author', 'name email profilePhoto')
+      .populate('comments.author', 'name email profilePhoto')
       .sort({ createdAt: -1 });
 
     res.status(200).json(posts);

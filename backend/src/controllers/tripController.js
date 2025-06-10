@@ -33,9 +33,9 @@ exports.createTrip = async (req, res) => {
 
     // Populate the trip with user details
     await trip.populate([
-      { path: 'members', select: 'name email avatar' },
-      { path: 'admins', select: 'name email avatar' },
-      { path: 'createdBy', select: 'name email avatar' }
+      { path: 'members', select: 'name email profilePhoto' },
+      { path: 'admins', select: 'name email profilePhoto' },
+      { path: 'createdBy', select: 'name email profilePhoto' }
     ]);
 
     res.status(201).json(trip);
@@ -54,9 +54,9 @@ exports.createTrip = async (req, res) => {
 exports.getTripById = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id)
-      .populate('members', 'name email avatar')
-      .populate('admins', 'name email avatar')
-      .populate('createdBy', 'name email avatar');
+      .populate('members', 'name email profilePhoto')
+      .populate('admins', 'name email profilePhoto')
+      .populate('createdBy', 'name email profilePhoto');
 
     if (!trip) {
       return res.status(404).json({ error: 'Viagem não encontrada' });
@@ -127,9 +127,9 @@ exports.getTrips = async (req, res) => {
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
-        .populate('members', 'name email avatar')
-        .populate('admins', 'name email avatar')
-        .populate('createdBy', 'name email avatar'),
+        .populate('members', 'name email profilePhoto')
+        .populate('admins', 'name email profilePhoto')
+        .populate('createdBy', 'name email profilePhoto'),
       Trip.countDocuments(query)
     ]);
 
@@ -170,9 +170,9 @@ exports.updateTrip = async (req, res) => {
       { $set: req.body },
       { new: true, runValidators: true }
     ).populate([
-      { path: 'members', select: 'name email avatar' },
-      { path: 'admins', select: 'name email avatar' },
-      { path: 'createdBy', select: 'name email avatar' }
+      { path: 'members', select: 'name email profilePhoto' },
+      { path: 'admins', select: 'name email profilePhoto' },
+      { path: 'createdBy', select: 'name email profilePhoto' }
     ]);
 
     res.status(200).json(updatedTrip);
@@ -235,9 +235,9 @@ exports.addMember = async (req, res) => {
 
     // Populate the updated trip
     await trip.populate([
-      { path: 'members', select: 'name email avatar' },
-      { path: 'admins', select: 'name email avatar' },
-      { path: 'createdBy', select: 'name email avatar' }
+      { path: 'members', select: 'name email profilePhoto' },
+      { path: 'admins', select: 'name email profilePhoto' },
+      { path: 'createdBy', select: 'name email profilePhoto' }
     ]);
 
     res.status(200).json(trip);
@@ -274,9 +274,9 @@ exports.removeMember = async (req, res) => {
 
     // Populate the updated trip
     await trip.populate([
-      { path: 'members', select: 'name email avatar' },
-      { path: 'admins', select: 'name email avatar' },
-      { path: 'createdBy', select: 'name email avatar' }
+      { path: 'members', select: 'name email profilePhoto' },
+      { path: 'admins', select: 'name email profilePhoto' },
+      { path: 'createdBy', select: 'name email profilePhoto' }
     ]);
 
     res.status(200).json(trip);

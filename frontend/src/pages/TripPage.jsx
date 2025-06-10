@@ -310,29 +310,38 @@ function TripPage() {
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <img
-                        src={member.avatar ? `${API_URL}${member.avatar}` : '/default-avatar.png'}
-                        alt={member.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/default-avatar.png';
-                        }}
-                      />
+                      <div className="relative">
+                        <img
+                          src={member.profilePhoto ? `${API_URL}${member.profilePhoto}` : '/default-avatar.png'}
+                          alt={member.name}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/default-avatar.png';
+                          }}
+                        />
+                        {trip.admins?.some(admin => admin._id === member._id) && (
+                          <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <h3 className="font-medium text-sm">{member.name}</h3>
                         <p className="text-gray-500 text-xs">{member.email}</p>
                       </div>
                     </div>
                     {trip.admins?.some(admin => admin._id === member._id) && (
-                      <span className="text-xs text-blue-500">Admin</span>
+                      <span className="text-xs text-blue-500 font-medium">Admin</span>
                     )}
                   </div>
                 ))}
                 {trip.members?.length > 5 && (
                   <button
                     onClick={() => {/* TODO: Implement view all members */}}
-                    className="w-full text-center text-blue-500 hover:text-blue-600 text-sm py-2"
+                    className="w-full text-center text-blue-500 hover:text-blue-600 text-sm py-2 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     Ver todos os {trip.members.length} membros
                   </button>

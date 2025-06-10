@@ -22,13 +22,20 @@ function PostCard({ post }) {
       <div className="p-4 sm:p-6 border-b border-gray-100">
         <div className="flex items-start gap-3">
           <img
-            src={post.author.avatar ? `${API_URL}/uploads/${post.author.avatar}` : '/default-avatar.png'}
+            src={post.author.profilePhoto ? `${API_URL}${post.author.profilePhoto}` : '/default-avatar.png'}
             alt={post.author.name}
-            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/default-avatar.png';
+            }}
           />
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <h3 className="font-semibold text-gray-900 truncate">{post.author.name}</h3>
+              <div>
+                <h3 className="font-semibold text-gray-900 truncate">{post.author.name}</h3>
+                <p className="text-sm text-gray-500">{post.author.role}</p>
+              </div>
               <div className="flex items-center gap-1 text-sm text-gray-500">
                 <Clock className="w-4 h-4" />
                 <span>{formatDate(post.createdAt)}</span>
@@ -84,7 +91,7 @@ PostCard.propTypes = {
     author: PropTypes.shape({
       _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
-      avatar: PropTypes.string
+      profilePhoto: PropTypes.string
     }).isRequired,
     location: PropTypes.string,
     images: PropTypes.arrayOf(PropTypes.string),
