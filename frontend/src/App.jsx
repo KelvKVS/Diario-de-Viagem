@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
 import MobileSidebar from './components/MobileSidebar';
 import ProtectedRoute from './components/ProtectedRoute';
+import NotFound from './pages/NotFound';
 import '/src/assets/style/app.css';
 
 function LogoutRoute() {
@@ -80,27 +81,12 @@ function AppContent() {
                 <TripPage />
               </ProtectedRoute>
             } />
-            <Route path="/itineraries" element={
-              <ProtectedRoute>
-                <h1 className="text-xl">Roteiros</h1>
-              </ProtectedRoute>
-            } />
-            <Route path="/community" element={
-              <ProtectedRoute>
-                <h1 className="text-xl">Comunidade</h1>
-              </ProtectedRoute>
-            } />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
             } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <h1 className="text-xl">Configurações</h1>
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </main>

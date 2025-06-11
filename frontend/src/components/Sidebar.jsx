@@ -43,15 +43,11 @@ function Sidebar() {
                 <nav className="space-y-2">
                     <SidebarItem icon={Home} label="Início" to="/home" /> 
                     <SidebarItem icon={Compass} label="Explorar" to="/explorer" />
-                    <SidebarItem icon={MapPin} label="Roteiros" to="/itineraries" />
-                    <SidebarItem icon={MessageCircle} label="Comunidade" to="/community" />
                 </nav>
             </div>
 
             <div className="p-4 border-t border-gray-100">
                 <SidebarItem icon={CircleUserRound} label="Perfil" to="/profile" />
-                <SidebarItem icon={Settings} label="Configurações" to="/settings" />
-
                 <button
                     onClick={() => setShowLogoutModal(true)}
                     className={`group flex items-center w-full px-3 py-3 rounded-lg transition-all duration-300
