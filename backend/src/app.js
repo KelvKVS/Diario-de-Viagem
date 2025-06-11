@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -45,7 +46,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/diarioVia
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
-app.use('/api/trips', tripRoutes);
+app.use('/api/trips', authMiddleware, tripRoutes);
 app.use('/api/images', imageRoutes);
 
 app.get('/', (req, res) => {

@@ -89,21 +89,12 @@ exports.uploadProfilePhoto = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.userId; // From auth middleware
-    const { name, email, bio, location } = req.body;
-
-    // Verificar se o email já está em uso por outro usuário
-    if (email) {
-      const existingUser = await Usuario.findOne({ email, _id: { $ne: userId } });
-      if (existingUser) {
-        return res.status(400).json({ message: "Este email já está em uso" });
-      }
-    }
+    const { name, bio, location } = req.body;
 
     const updatedUser = await Usuario.findByIdAndUpdate(
       userId,
       { 
         name,
-        email,
         bio,
         location
       },

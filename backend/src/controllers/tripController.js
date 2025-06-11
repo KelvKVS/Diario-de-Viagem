@@ -62,8 +62,12 @@ exports.getTripById = async (req, res) => {
       return res.status(404).json({ error: 'Viagem não encontrada' });
     }
 
+    // Convert all IDs to strings for comparison
+    const memberIds = trip.members.map(member => member._id.toString());
+    const userId = req.userId?.toString();
+
     // Check if trip is public or user is a member
-    if (!trip.isPublic && (!req.user || !trip.members.includes(req.user._id))) {
+    if (!trip.isPublic && (!userId || !memberIds.includes(userId))) {
       return res.status(403).json({ error: 'Acesso não autorizado' });
     }
 
@@ -100,13 +104,19 @@ exports.getTrips = async (req, res) => {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       isPublic = true,
-      search = ''
+      search = '',
+      memberId = null
     } = req.query;
 
     // Build query
     const query = {};
     if (isPublic === 'true') {
       query.isPublic = true;
+    }
+
+    // Add member filter if provided
+    if (memberId) {
+      query.members = memberId;
     }
 
     // Add search if provided

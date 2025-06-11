@@ -29,7 +29,8 @@ const authMiddleware = async (req, res, next) => {
 
     // Set user and userId in request
     req.user = user;
-    req.userId = user._id;
+    req.userId = user._id.toString(); // Ensure userId is a string
+
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

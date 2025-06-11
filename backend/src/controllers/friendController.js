@@ -1,5 +1,33 @@
 const User = require('../models/user');
 
+exports.searchFriends = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const currentUserId = req.userId; // Vem do middleware de autenticação
+
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({ error: 'A busca deve ter pelo menos 2 caracteres' });
+    }
+
+    // Busca o usuário atual primeiro
+    const currentUser = await User.findById(currentUserId).populate('friends');
+    if (!currentUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Busca apenas nos amigos do usuário
+    const searchRegex = new RegExp(q, 'i');
+    const friends = currentUser.friends.filter(friend => 
+      friend.name.match(searchRegex) || friend.email.match(searchRegex)
+    );
+
+    res.status(200).json(friends);
+  } catch (error) {
+    console.error('Erro na busca de amigos:', error);
+    res.status(500).json({ error: 'Erro ao buscar amigos' });
+  }
+};
+
 exports.sendFriendRequest = async (req, res) => {
   try {
     const { friendId } = req.body;

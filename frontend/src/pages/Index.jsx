@@ -9,8 +9,7 @@ import {
     Users,
     Briefcase
 } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import apiService from '../services/api';
 
 function Index() {
     const navigate = useNavigate();
@@ -24,32 +23,20 @@ function Index() {
     useEffect(() => {
         const verifyToken = async () => {
             const token = localStorage.getItem('authToken');
+            
             if (!token) {
                 setIsLoading(false);
                 return;
             }
 
             try {
-                const response = await fetch(`${API_URL}/api/auth/verify-token`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.valid) {
-                        navigate('/home');
-                    } else {
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem('userData');
-                    }
-                } else {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userData');
+                const response = await apiService.get('/api/auth/verify-token');
+                if (response.valid) {
+                    navigate('/home');
                 }
             } catch (error) {
-                console.error('Erro ao verificar token:', error);
+                // Silently handle invalid token
+                apiService.clearAuth();
             } finally {
                 setIsLoading(false);
             }
@@ -76,27 +63,15 @@ function Index() {
         }
 
         try {
-            const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
             const body = isLogin ? 
                 { email, password } : 
                 { name, email, password };
 
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro na autenticação');
-            }
+            const response = await apiService.post(endpoint, body);
 
             if (isLogin) {
-                localStorage.setItem('authToken', data.token);
+                apiService.setAuthToken(response.token);
                 navigate('/home');
             } else {
                 setIsLogin(true);
@@ -116,31 +91,31 @@ function Index() {
         <div className="min-h-screen bg-[url(images/pexels-willianjusten-28948282.jpg)] bg-cover bg-center bg-no-repeat">
             <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center p-4">
                 <div className="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-                    {/* Seção Ilustrativa */}
-                    <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-teal-500 p-12 text-white flex flex-col justify-center items-center relative overflow-hidden">
+                    {/* Left Side - Branding */}
+                    <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-teal-500 p-8 md:p-12 text-white flex flex-col justify-center items-center relative overflow-hidden">
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20width%3D%22100%22%20height%3D%22100%22%20viewBox%3D%220%200%20100%20100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M11%2018c3.866%200%207-3.134%207-7s-3.134-7-7-7-7%203.134-7%207%203.134%207%207%207zm48%2025c3.866%200%207-3.134%207-7s-3.134-7-7-7-7%203.134-7%207%203.134%207%207%207zm-43-7c1.657%200%203-1.343%203-3s-1.343-3-3-3-3%201.343-3%203%201.343%203%203%203zm63%2031c1.657%200%203-1.343%203-3s-1.343-3-3-3-3%201.343-3%203%201.343%203%203%203zM34%2090c1.657%200%203-1.343%203-3s-1.343-3-3-3-3%201.343-3%203%201.343%203%203%203zm56-76c1.657%200%203-1.343%203-3s-1.343-3-3-3-3%201.343-3%203%201.343%203%203%203zM12%2086c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204zm28-65c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204zm23-11c2.76%200%205-2.24%205-5s-2.24-5-5-5-5%202.24-5%205%202.24%205%205%205zm-6%2060c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204zm29%2022c2.76%200%205-2.24%205-5s-2.24-5-5-5-5%202.24-5%205%202.24%205%205%205zM32%2063c2.76%200%205-2.24%205-5s-2.24-5-5-5-5%202.24-5%205%202.24%205%205%205zm57-13c2.76%200%205-2.24%205-5s-2.24-5-5-5-5%202.24-5%205%202.24%205%205%205z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%220.1%22%20fill-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] opacity-30"></div>
-                        <Briefcase className="w-24 h-24 mb-8 animate-float text-white/90" />
-                        <h2 className="text-5xl font-bold mb-6 text-center relative">TravelConnect</h2>
-                        <p className="text-lg text-center opacity-90 mb-12 relative">
+                        <Briefcase className="w-16 h-16 md:w-24 md:h-24 mb-6 md:mb-8 animate-float text-white/90" />
+                        <h2 className="text-4xl md:text-5xl font-bold mb-4 md:mb-6 text-center relative">TravelConnect</h2>
+                        <p className="text-base md:text-lg text-center opacity-90 mb-8 md:mb-12 relative px-4">
                             Conecte-se com viajantes pelo mundo e compartilhe suas aventuras!
                         </p>
-                        <div className="flex space-x-6 relative">
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
-                                <Globe className="w-7 h-7" />
+                        <div className="flex space-x-4 md:space-x-6 relative">
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
+                                <Globe className="w-6 h-6 md:w-7 md:h-7" />
                             </div>
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
-                                <MapPin className="w-7 h-7" />
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
+                                <MapPin className="w-6 h-6 md:w-7 md:h-7" />
                             </div>
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
-                                <Users className="w-7 h-7" />
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors">
+                                <Users className="w-6 h-6 md:w-7 md:h-7" />
                             </div>
                         </div>
                     </div>
 
-                    {/* Seção do Formulário */}
-                    <div className="md:w-1/2 p-12">
-                        <div className="mb-10">
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+                    {/* Right Side - Form */}
+                    <div className="md:w-1/2 p-6 md:p-12">
+                        <div className="mb-8 md:mb-10">
+                            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                                 {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
                             </h1>
                             <p className="text-gray-500 mt-2">
@@ -149,7 +124,7 @@ function Index() {
                         </div>
 
                         {error && (
-                            <div className={`mb-6 p-4 rounded-xl flex items-center ${
+                            <div className={`mb-6 p-3 md:p-4 rounded-xl flex items-center ${
                                 error.includes('sucesso') 
                                     ? 'bg-green-50/50 text-green-700 border border-green-200' 
                                     : 'bg-red-50/50 text-red-700 border border-red-200'
@@ -158,19 +133,19 @@ function Index() {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                             {!isLogin && (
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-gray-700">Nome completo</label>
                                     <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
                                             <User className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                         </div>
                                         <input
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                                            className="w-full pl-10 md:pl-12 pr-4 py-2.5 md:py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                                             placeholder="Digite seu nome"
                                         />
                                     </div>
@@ -180,14 +155,14 @@ function Index() {
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700">E-mail</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
                                         <Mail className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                     </div>
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                                        className="w-full pl-10 md:pl-12 pr-4 py-2.5 md:py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                                         placeholder="Digite seu e-mail"
                                     />
                                 </div>
@@ -196,14 +171,14 @@ function Index() {
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700">Senha</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
                                         <Lock className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                     </div>
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                                        className="w-full pl-10 md:pl-12 pr-4 py-2.5 md:py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                                         placeholder="Digite sua senha"
                                     />
                                 </div>
@@ -212,7 +187,7 @@ function Index() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-xl font-medium
+                                className="w-full py-3 md:py-3.5 px-4 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-xl font-medium
                                     hover:from-blue-700 hover:to-teal-600 focus:ring-2 focus:ring-blue-200 
                                     disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200
                                     flex items-center justify-center space-x-2"
@@ -231,7 +206,7 @@ function Index() {
                             </button>
                         </form>
 
-                        <div className="mt-8 text-center">
+                        <div className="mt-6 md:mt-8 text-center">
                             <p className="text-gray-600">
                                 {isLogin ? 'Primeira vez aqui? ' : 'Já faz parte? '}
                                 <button

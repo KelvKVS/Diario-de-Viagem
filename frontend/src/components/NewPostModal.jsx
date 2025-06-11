@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import { Image, MapPin } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import apiService from '../services/api';
 
 function NewPostModal({ show, onClose, tripId, onPostCreated }) {
   const [title, setTitle] = useState('');
@@ -19,7 +18,6 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
@@ -28,24 +26,17 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
         formData.append('images', image);
       });
 
-      const response = await fetch(`${API_URL}/api/posts/${tripId}/posts`, {
-        method: 'POST',
+      const response = await apiService.post(`/api/posts/${tripId}/posts`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Erro ao criar post');
-      }
-
-      const data = await response.json();
-      onPostCreated(data.post);
+      onPostCreated(response.post);
       onClose();
       resetForm();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Erro ao criar post');
     } finally {
       setLoading(false);
     }
@@ -53,7 +44,25 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+    if (files.length > 5) {
+      setError('Você pode selecionar no máximo 5 imagens');
+      return;
+    }
+
+    const validFiles = files.filter(file => {
+      const isValid = file.type.startsWith('image/');
+      if (!isValid) {
+        setError('Por favor, selecione apenas arquivos de imagem');
+      }
+      return isValid;
+    });
+
+    if (validFiles.length !== files.length) {
+      return;
+    }
+
+    setImages(validFiles);
+    setError(null);
   };
 
   const resetForm = () => {
@@ -85,6 +94,8 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               required
+              maxLength={100}
+              placeholder="Dê um título ao seu post"
             />
           </div>
 
@@ -99,7 +110,12 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
               rows="4"
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               required
+              maxLength={1000}
+              placeholder="Compartilhe sua experiência..."
             />
+            <p className="text-sm text-gray-500 text-right mt-1">
+              {content.length}/1000 caracteres
+            </p>
           </div>
 
           <div>
@@ -113,6 +129,8 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                placeholder="Onde você está?"
+                maxLength={100}
               />
               <MapPin className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
             </div>
@@ -123,7 +141,7 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
               Imagens
             </label>
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200">
+              <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">
                 <Image className="w-5 h-5" />
                 <span>Selecionar Imagens</span>
                 <input
@@ -141,21 +159,27 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
                 </span>
               )}
             </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Máximo de 5 imagens. Formatos aceitos: JPG, PNG, GIF
+            </p>
           </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+            disabled={loading || !title.trim() || !content.trim()}
+            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Criando...' : 'Criar Post'}
           </button>

@@ -19,19 +19,15 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
         
         const submitData = new FormData();
         
-        // Add all form fields except coverImage
         submitData.append('name', formData.name);
         submitData.append('description', formData.description);
         submitData.append('isPublic', formData.isPublic);
         submitData.append('startDate', formData.startDate);
         submitData.append('endDate', formData.endDate);
         
-        // Add coverImage if it exists
         if (formData.coverImage) {
             submitData.append('coverImage', formData.coverImage);
         }
-
-        console.log('Submitting form data:', Object.fromEntries(submitData)); // Debug log
         onSubmit(submitData);
     };
 
@@ -46,13 +42,11 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type
             if (!file.type.startsWith('image/')) {
                 alert('Por favor, selecione apenas arquivos de imagem.');
                 return;
             }
 
-            // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert('A imagem deve ter no máximo 5MB.');
                 return;
@@ -63,7 +57,6 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
                 coverImage: file
             }));
 
-            // Create preview
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewUrl(reader.result);

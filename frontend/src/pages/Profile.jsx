@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, 
-  Settings, 
   Users, 
   UserPlus, 
   Bell, 
@@ -17,7 +16,7 @@ import {
   Plus,
   Camera
 } from 'lucide-react';
-import api from '../services/api';
+import apiService from '../services/api';
 import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import PostCard from '../components/PostCard';
@@ -37,7 +36,6 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     bio: '',
     location: ''
   });
@@ -54,23 +52,17 @@ const Profile = () => {
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          navigate('/');
-          return;
-        }
-
-        const response = await api.get('/api/auth/verify-token');
-        if (response.data.valid) {
-          setUserId(response.data.user._id);
-          setUserData(response.data.user);
+        const response = await apiService.get('/api/auth/verify-token');
+        if (response.valid) {
+          setUserId(response.user._id);
+          setUserData(response.user);
         } else {
-          localStorage.clear();
+          apiService.clearAuth();
           navigate('/');
         }
       } catch (error) {
         console.error('Error verifying token:', error);
-        localStorage.clear();
+        apiService.clearAuth();
         navigate('/');
       }
     };
@@ -88,8 +80,8 @@ const Profile = () => {
 
   const fetchFriends = async () => {
     try {
-      const response = await api.get(`/api/users/friends/${userId}`);
-      setFriends(response.data);
+      const response = await apiService.get(`/api/users/friends/${userId}`);
+      setFriends(response);
     } catch (error) {
       console.error('Error fetching friends:', error);
       showToast('Erro ao carregar amigos', 'error');
@@ -98,8 +90,8 @@ const Profile = () => {
 
   const fetchFriendRequests = async () => {
     try {
-      const response = await api.get(`/api/users/requests/${userId}`);
-      setFriendRequests(response.data);
+      const response = await apiService.get(`/api/users/requests/${userId}`);
+      setFriendRequests(response);
     } catch (error) {
       console.error('Error fetching friend requests:', error);
       showToast('Erro ao carregar solicitações', 'error');
@@ -111,8 +103,8 @@ const Profile = () => {
   const fetchUserPosts = async () => {
     try {
       setPostsLoading(true);
-      const response = await api.get(`/api/posts/user/${userId}`);
-      setUserPosts(response.data);
+      const response = await apiService.get(`/api/posts/user/${userId}`);
+      setUserPosts(response);
     } catch (error) {
       console.error('Error fetching user posts:', error);
       showToast('Erro ao carregar posts', 'error');
@@ -123,7 +115,7 @@ const Profile = () => {
 
   const handleAcceptRequest = async (requestId) => {
     try {
-      await api.post('/api/users/accept-request', {
+      await apiService.post('/api/users/accept-request', {
         userId,
         friendId: requestId
       });
@@ -138,7 +130,7 @@ const Profile = () => {
 
   const handleRejectRequest = async (requestId) => {
     try {
-      await api.post('/api/users/reject-request', {
+      await apiService.post('/api/users/reject-request', {
         userId,
         friendId: requestId
       });
@@ -152,7 +144,7 @@ const Profile = () => {
 
   const handleSendRequest = async (targetUserId) => {
     try {
-      await api.post('/api/users/send-request', {
+      await apiService.post('/api/users/send-request', {
         friendId: targetUserId
       });
       setSearchResults(prevResults => 
@@ -161,7 +153,7 @@ const Profile = () => {
       showToast('Solicitação enviada com sucesso!');
     } catch (error) {
       console.error('Error sending friend request:', error);
-      showToast(error.response?.data?.error || 'Erro ao enviar solicitação', 'error');
+      showToast(error.message || 'Erro ao enviar solicitação', 'error');
     }
   };
 
@@ -171,8 +163,10 @@ const Profile = () => {
 
     setSearchLoading(true);
     try {
-      const response = await api.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchResults(response.data);
+      const response = await apiService.get(`/api/users/search`, {
+        params: { q: searchQuery }
+      });
+      setSearchResults(response);
     } catch (error) {
       console.error('Error searching users:', error);
       showToast('Erro ao buscar usuários', 'error');
@@ -218,16 +212,16 @@ const Profile = () => {
     formData.append('profilePhoto', profilePhoto);
 
     try {
-      const response = await api.post('/api/users/profile-photo', formData, {
+      const response = await apiService.post('/api/users/profile-photo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       
-      if (response.data.user) {
+      if (response.user) {
         setUserData(prev => ({
           ...prev,
-          ...response.data.user
+          ...response.user
         }));
       }
       setProfilePhoto(null);
@@ -236,7 +230,7 @@ const Profile = () => {
       showToast('Foto de perfil atualizada com sucesso!');
     } catch (error) {
       console.error('Error uploading photo:', error);
-      showToast(error.response?.data?.message || 'Erro ao fazer upload da foto', 'error');
+      showToast(error.message || 'Erro ao fazer upload da foto', 'error');
     } finally {
       setUploadLoading(false);
     }
@@ -245,13 +239,13 @@ const Profile = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.put('/api/users/profile', formData);
-      setUserData(response.data);
+      const response = await apiService.put('/api/users/profile', formData);
+      setUserData(response);
       setEditMode(false);
       showToast('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      showToast(error.response?.data?.message || 'Erro ao atualizar perfil', 'error');
+      showToast(error.message || 'Erro ao atualizar perfil', 'error');
     }
   };
 
@@ -272,7 +266,6 @@ const Profile = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Profile Header with Cover Photo */}
       <div className="relative mb-8">
         <div className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-lg"></div>
         <div className="absolute -bottom-16 left-8">
@@ -307,9 +300,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Profile Info */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
@@ -347,7 +338,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Friends Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -405,7 +395,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Friend Requests Section */}
           {friendRequests.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -459,7 +448,6 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Right Column - Posts */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -485,61 +473,71 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Modals */}
       <Modal
         show={editMode}
         onClose={() => setEditMode(false)}
         title="Editar Perfil"
       >
-        <div className="p-4">
-          <form onSubmit={handleProfileUpdate} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6">
+          <form onSubmit={handleProfileUpdate} className="space-y-6">
+            <div className="space-y-4">
               <FormField
                 label="Nome"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                placeholder="Seu nome completo"
                 icon={<User className="w-5 h-5 text-gray-400" />}
-              />
-              <FormField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                icon={<Mail className="w-5 h-5 text-gray-400" />}
+                maxLength={50}
+                className="w-full"
               />
             </div>
-            <FormField
-              label="Bio"
-              name="bio"
-              type="textarea"
-              value={formData.bio}
-              onChange={handleInputChange}
-              rows="3"
-              icon={<UserCircle className="w-5 h-5 text-gray-400" />}
-            />
-            <FormField
-              label="Localização"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              icon={<MapPin className="w-5 h-5 text-gray-400" />}
-            />
-            <div className="flex justify-end space-x-3 pt-4">
+
+            <div className="space-y-2">
+              <FormField
+                label="Bio"
+                name="bio"
+                type="textarea"
+                value={formData.bio}
+                onChange={handleInputChange}
+                rows="4"
+                placeholder="Conte um pouco sobre você..."
+                icon={<UserCircle className="w-5 h-5 text-gray-400" />}
+                maxLength={200}
+                className="w-full resize-none"
+              />
+              <p className="text-sm text-gray-500 text-right">
+                {formData.bio.length}/200 caracteres
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <FormField
+                label="Localização"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Sua cidade, país"
+                icon={<MapPin className="w-5 h-5 text-gray-400" />}
+                maxLength={100}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => setEditMode(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors duration-200"
               >
                 <X className="w-5 h-5" />
                 <span>Cancelar</span>
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!formData.name.trim()}
               >
                 <Check className="w-5 h-5" />
                 <span>Salvar Alterações</span>
@@ -689,7 +687,6 @@ const Profile = () => {
         </div>
       </Modal>
 
-      {/* Toast Notification */}
       {toast.show && (
         <Toast
           message={toast.message}

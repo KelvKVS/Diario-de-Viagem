@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TripFeed from '../components/TripFeed';
-import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft, Settings, UserPlus, Trash2, Save, X, Bell } from 'lucide-react';
+import { Calendar, Users, MapPin, Globe, Lock, Edit, Share2, MoreVertical, ChevronLeft, Settings, UserPlus, Bell, Search } from 'lucide-react';
 import Modal from '../components/Modal';
 import AdminPanel from '../components/AdminPanel';
 import Toast from '../components/Toast';
+import apiService from '../services/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -16,12 +17,17 @@ function TripPage() {
   const [error, setError] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('edit');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     fetchTripDetails();
@@ -29,22 +35,12 @@ function TripPage() {
 
   const fetchTripDetails = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar detalhes da viagem');
-      }
-
-      const data = await response.json();
-      setTrip(data);
+      const response = await apiService.get(`/api/trips/${tripId}`);
+      setTrip(response);
       
       const userData = JSON.parse(localStorage.getItem('userData'));
-      setIsAdmin(data.admins?.some(admin => admin._id === userData._id));
+      setIsAdmin(response.admins?.some(admin => admin._id === userData._id));
+      setIsMember(response.members?.some(member => member._id === userData._id));
     } catch (err) {
       setError(err.message);
       showToast(err.message, 'error');
@@ -57,22 +53,8 @@ function TripPage() {
     setSaving(true);
     setError(null);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(trip)
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao salvar alterações');
-      }
-
-      const updatedTrip = await response.json();
-      setTrip(updatedTrip);
+      const response = await apiService.put(`/api/trips/${tripId}`, trip);
+      setTrip(response);
       setIsAdminPanelOpen(false);
       showToast('Viagem atualizada com sucesso!');
     } catch (err) {
@@ -91,18 +73,7 @@ function TripPage() {
     setDeleting(true);
     setError(null);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao excluir viagem');
-      }
-
+      await apiService.delete(`/api/trips/${tripId}`);
       showToast('Viagem excluída com sucesso!');
       navigate('/');
     } catch (err) {
@@ -125,6 +96,40 @@ function TripPage() {
 
   const hideToast = () => {
     setToast({ show: false, message: '', type: 'success' });
+  };
+
+  const handleAddMember = async (userId) => {
+    try {
+      const response = await apiService.post(`/api/trips/${tripId}/members`, { userId });
+      setTrip(response);
+      setShowAddMemberModal(false);
+      showToast('Membro adicionado com sucesso!');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleSearchUsers = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const response = await apiService.get('/api/users/search-friends', {
+        params: { q: query }
+      });
+      
+      const filteredResults = response.filter(user => 
+        !trip.members.some(member => member._id === user._id)
+      );
+      setSearchResults(filteredResults);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setSearching(false);
+    }
   };
 
   if (loading) {
@@ -166,7 +171,7 @@ function TripPage() {
 
         <div className="relative h-[50vh] min-h-[400px] bg-gray-900">
           <img
-            src={trip.coverImage ? `${API_URL}${trip.coverImage}` : '/default-trip-cover.jpg'}
+            src={trip.coverImage ? `${apiService.baseURL}${trip.coverImage}` : '/default-trip-cover.jpg'}
             alt={trip.name}
             className="w-full h-full object-cover"
           />
@@ -295,7 +300,11 @@ function TripPage() {
                 </h2>
                 {isAdmin && (
                   <button
-                    onClick={() => {/* TODO: Implement member management */}}
+                    onClick={() => {
+                      setShowAddMemberModal(true);
+                      setActiveTab('addMember');
+                      setShowMenu(false);
+                    }}
                     className="text-blue-500 hover:text-blue-600 flex items-center gap-1"
                   >
                     <UserPlus className="w-4 h-4" />
@@ -312,7 +321,7 @@ function TripPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <img
-                          src={member.profilePhoto ? `${API_URL}${member.profilePhoto}` : '/default-avatar.png'}
+                          src={member.profilePhoto ? `${apiService.baseURL}${member.profilePhoto}` : '/default-avatar.png'}
                           alt={member.name}
                           className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
                           onError={(e) => {
@@ -356,7 +365,7 @@ function TripPage() {
                 <Bell className="w-5 h-5" />
                 Posts da Viagem
               </h2>
-              <TripFeed tripId={tripId} />
+              <TripFeed tripId={tripId} isMember={isMember} />
             </div>
           </div>
         </div>
@@ -403,6 +412,67 @@ function TripPage() {
             >
               Copiar
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        show={showAddMemberModal}
+        onClose={() => setShowAddMemberModal(false)}
+        title="Adicionar Membro"
+      >
+        <div className="p-4">
+          <div className="relative mb-4">
+            <input
+              type="text"
+              placeholder="Buscar usuários..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                handleSearchUsers(e.target.value);
+              }}
+              className="w-full p-2 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+          </div>
+
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {searching ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : searchResults.length > 0 ? (
+              searchResults.map((user) => (
+                <div
+                  key={user._id}
+                  className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user.profilePhoto ? `${apiService.baseURL}${user.profilePhoto}` : '/default-avatar.png'}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
+                    />
+                    <div>
+                      <h3 className="font-medium text-sm">{user.name}</h3>
+                      <p className="text-gray-500 text-xs">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddMember(user._id)}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+              ))
+            ) : searchQuery ? (
+              <p className="text-center text-gray-500 py-4">Nenhum usuário encontrado</p>
+            ) : null}
           </div>
         </div>
       </Modal>
