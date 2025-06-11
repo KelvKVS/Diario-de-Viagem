@@ -33,10 +33,36 @@ function TripPage() {
     fetchTripDetails();
   }, [tripId]);
 
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    try {
+      return new Date(date).toISOString().split('T')[0];
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '';
+    }
+  };
+
+  const formatDateForAPI = (date) => {
+    if (!date) return null;
+    try {
+      return new Date(date).toISOString();
+    } catch (e) {
+      console.error('Error formatting date for API:', e);
+      return null;
+    }
+  };
+
   const fetchTripDetails = async () => {
     try {
       const response = await apiService.get(`/api/trips/${tripId}`);
-      setTrip(response);
+      // Format dates for display
+      const formattedTrip = {
+        ...response,
+        startDate: formatDateForDisplay(response.startDate),
+        endDate: formatDateForDisplay(response.endDate)
+      };
+      setTrip(formattedTrip);
       
       const userData = JSON.parse(localStorage.getItem('userData'));
       setIsAdmin(response.admins?.some(admin => admin._id === userData._id));
@@ -53,8 +79,21 @@ function TripPage() {
     setSaving(true);
     setError(null);
     try {
-      const response = await apiService.put(`/api/trips/${tripId}`, trip);
-      setTrip(response);
+      // Format dates for API
+      const tripData = {
+        ...trip,
+        startDate: formatDateForAPI(trip.startDate),
+        endDate: trip.endDate ? formatDateForAPI(trip.endDate) : null
+      };
+
+      const response = await apiService.put(`/api/trips/${tripId}`, tripData);
+      // Format dates for display
+      const formattedTrip = {
+        ...response,
+        startDate: formatDateForDisplay(response.startDate),
+        endDate: formatDateForDisplay(response.endDate)
+      };
+      setTrip(formattedTrip);
       setIsAdminPanelOpen(false);
       showToast('Viagem atualizada com sucesso!');
     } catch (err) {
@@ -132,6 +171,13 @@ function TripPage() {
     }
   };
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '/placeholder-trip.jpg';
+    if (imagePath.startsWith('http')) return imagePath;
+    const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+    return `${API_URL}/${cleanPath}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -171,9 +217,13 @@ function TripPage() {
 
         <div className="relative h-[50vh] min-h-[400px] bg-gray-900">
           <img
-            src={trip.coverImage ? `${apiService.baseURL}${trip.coverImage}` : '/default-trip-cover.jpg'}
+            src={getImageUrl(trip.coverImage)}
             alt={trip.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/placeholder-trip.jpg';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent">
             <div className="absolute bottom-0 left-0 right-0 p-8">
@@ -360,13 +410,7 @@ function TripPage() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Posts da Viagem
-              </h2>
               <TripFeed tripId={tripId} isMember={isMember} />
-            </div>
           </div>
         </div>
       </div>

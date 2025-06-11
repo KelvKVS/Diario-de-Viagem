@@ -9,6 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const TripCard = ({ trip, isClickable = true }) => {
   const formatDate = (date) => {
+    if (!date) return '';
     return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
   };
 
@@ -45,7 +46,10 @@ const TripCard = ({ trip, isClickable = true }) => {
         
         <div className="flex items-center text-gray-600 mb-2">
           <Calendar className="w-4 h-4 mr-2" />
-          <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
+          <span>
+            {formatDate(trip.startDate)}
+            {trip.endDate ? ` - ${formatDate(trip.endDate)}` : ''}
+          </span>
         </div>
         
         <div className="flex items-center text-gray-600">
@@ -73,7 +77,7 @@ TripCard.propTypes = {
     name: PropTypes.string.isRequired,
     description: PropTypes.string,
     startDate: PropTypes.string.isRequired,
-    endDate: PropTypes.string.isRequired,
+    endDate: PropTypes.string,
     coverImage: PropTypes.string,
     isPublic: PropTypes.bool,
     members: PropTypes.array,

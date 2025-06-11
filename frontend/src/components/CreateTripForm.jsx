@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, Users, Globe, Lock, Upload, X } from 'lucide-react';
+import { Globe, Lock, Upload, X } from 'lucide-react';
 
 const CreateTripForm = ({ onSubmit, onCancel }) => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         isPublic: true,
-        startDate: '',
-        endDate: '',
         coverImage: null
     });
 
@@ -22,8 +20,6 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
         submitData.append('name', formData.name);
         submitData.append('description', formData.description);
         submitData.append('isPublic', formData.isPublic);
-        submitData.append('startDate', formData.startDate);
-        submitData.append('endDate', formData.endDate);
         
         if (formData.coverImage) {
             submitData.append('coverImage', formData.coverImage);
@@ -105,44 +101,6 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
                 />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
-                        Data de Início
-                    </label>
-                    <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="date"
-                            id="startDate"
-                            name="startDate"
-                            value={formData.startDate}
-                            onChange={handleChange}
-                            required
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
-                        Data de Término
-                    </label>
-                    <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="date"
-                            id="endDate"
-                            name="endDate"
-                            value={formData.endDate}
-                            onChange={handleChange}
-                            required
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                </div>
-            </div>
-
             <div>
                 <label className="block text-sm font-medium text-gray-700">Imagem de Capa</label>
                 <input
@@ -202,7 +160,6 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
                     disabled={isUploading}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Users className="w-4 h-4 mr-2" />
                     {isUploading ? 'Criando...' : 'Criar Viagem'}
                 </button>
             </div>

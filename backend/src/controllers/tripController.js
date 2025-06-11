@@ -2,7 +2,7 @@ const Trip = require('../models/trip');
 
 exports.createTrip = async (req, res) => {
   try {
-    const { name, startDate, endDate, isPublic, description } = req.body;
+    const { name, isPublic, description } = req.body;
     
     // Check if user exists in request
     if (!req.user || !req.user._id) {
@@ -20,8 +20,7 @@ exports.createTrip = async (req, res) => {
     const trip = new Trip({
       name,
       description,
-      startDate,
-      endDate,
+      startDate: new Date(), // Set start date to current date
       isPublic: isPublic === 'true',
       coverImage,
       members: [userId],

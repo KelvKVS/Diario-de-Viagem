@@ -12,11 +12,12 @@ const tripSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   },
   endDate: {
     type: Date,
-    required: true
+    required: false
   },
   coverImage: {
     type: String,

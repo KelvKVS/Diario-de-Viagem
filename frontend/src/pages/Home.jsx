@@ -20,6 +20,13 @@ function Home() {
   const [error, setError] = useState(null);
   const [userTrips, setUserTrips] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [showBanner, setShowBanner] = useState(() => {
+    const lastClosed = localStorage.getItem('bannerLastClosed');
+    if (!lastClosed) return true;
+    const last = new Date(lastClosed);
+    const now = new Date();
+    return (now - last) > 24 * 60 * 60 * 1000;
+  });
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
@@ -87,58 +94,71 @@ function Home() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
-      <div className="min-h-[50vh] bg-gradient-to-br from-sky-50 to-indigo-100 flex flex-col items-center justify-center px-4 py-8 md:py-12 relative overflow-hidden">
-        <div className="absolute top-10 left-10 w-24 h-24 rounded-full bg-amber-400/20 blur-2xl"></div>
-        <div className="absolute bottom-20 right-10 w-32 h-32 rounded-full bg-indigo-400/20 blur-2xl"></div>
-        <div className="absolute top-1/3 right-1/4 w-16 h-16 rounded-full bg-emerald-400/20 blur-2xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 opacity-10 blur-3xl"></div>
+      {showBanner && (
+        <div className="min-h-[50vh] bg-gradient-to-br from-sky-50 to-indigo-100 flex flex-col items-center justify-center px-4 py-8 md:py-12 relative overflow-hidden">
+          <div className="absolute top-10 left-10 w-24 h-24 rounded-full bg-amber-400/20 blur-2xl"></div>
+          <div className="absolute bottom-20 right-10 w-32 h-32 rounded-full bg-indigo-400/20 blur-2xl"></div>
+          <div className="absolute top-1/3 right-1/4 w-16 h-16 rounded-full bg-emerald-400/20 blur-2xl"></div>
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 opacity-10 blur-3xl"></div>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 md:px-6 py-1.5 rounded-full mb-4 md:mb-6">
-            <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-            <span className="font-medium text-sm md:text-base">Explore o mundo conosco</span>
-          </div>
+          <button
+            onClick={() => {
+              setShowBanner(false);
+              localStorage.setItem('bannerLastClosed', new Date().toISOString());
+            }}
+            className="absolute top-4 right-4 bg-white/80 hover:bg-white text-gray-700 rounded-full px-3 py-1 shadow transition"
+            aria-label="Fechar banner"
+          >
+            Fechar
+          </button>
 
-          <h1 className="text-3xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
-              Conectando viajantes,
-            </span>
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
-              inspirando jornadas
-            </span>
-          </h1>
+          <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+            <div className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 md:px-6 py-1.5 rounded-full mb-4 md:mb-6">
+              <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+              <span className="font-medium text-sm md:text-base">Explore o mundo conosco</span>
+            </div>
 
-          <p className="text-base md:text-xl text-gray-700 max-w-2xl mx-auto mb-6 md:mb-10 leading-relaxed">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
-              No TravelConnect, cada viagem é uma história compartilhada.
-            </span>
-            <br className="hidden md:block" />
-            <span className="hidden md:inline"> </span>
-            Descubra destinos autênticos através dos olhos de outros
-            exploradores e inspire-se para criar suas próprias aventuras
-            inesquecíveis.
-          </p>
+            <h1 className="text-3xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
+                Conectando viajantes,
+              </span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
+                inspirando jornadas
+              </span>
+            </h1>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 md:gap-4 mb-8 md:mb-12">
-            <button 
-              onClick={() => navigate('/explorer')}
-              className="w-full sm:w-auto flex items-center justify-center px-6 md:px-8 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-teal-500 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] group"
-            >
-              <Compass className="w-4 h-4 md:w-5 md:h-5 mr-2 transition-transform group-hover:rotate-12" />
-              <span>Começe a explorar</span>
-            </button>
+            <p className="text-base md:text-xl text-gray-700 max-w-2xl mx-auto mb-6 md:mb-10 leading-relaxed">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
+                No TravelConnect, cada viagem é uma história compartilhada.
+              </span>
+              <br className="hidden md:block" />
+              <span className="hidden md:inline"> </span>
+              Descubra destinos autênticos através dos olhos de outros
+              exploradores e inspire-se para criar suas próprias aventuras
+              inesquecíveis.
+            </p>
 
-            <button 
-              onClick={handleNewTrip}
-              className="w-full sm:w-auto flex items-center justify-center px-6 md:px-8 py-3 md:py-3.5 bg-white text-gray-800 font-medium rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-all"
-            >
-              <Send className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-              <span>Compartilhe sua viagem</span>
-            </button>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 md:gap-4 mb-8 md:mb-12">
+              <button 
+                onClick={() => navigate('/explorer')}
+                className="w-full sm:w-auto flex items-center justify-center px-6 md:px-8 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-teal-500 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] group"
+              >
+                <Compass className="w-4 h-4 md:w-5 md:h-5 mr-2 transition-transform group-hover:rotate-12" />
+                <span>Começe a explorar</span>
+              </button>
+
+              <button 
+                onClick={handleNewTrip}
+                className="w-full sm:w-auto flex items-center justify-center px-6 md:px-8 py-3 md:py-3.5 bg-white text-gray-800 font-medium rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-all"
+              >
+                <Send className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                <span>Compartilhe sua viagem</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">

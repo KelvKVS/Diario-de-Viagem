@@ -1,6 +1,7 @@
 import React from 'react';
 import AdminTabs from './AdminTabs';
 import FormField from './FormField';
+import { Calendar } from 'lucide-react';
 
 const AdminPanel = ({
   isOpen,
@@ -99,6 +100,23 @@ const AdminPanel = ({
 
             {activeTab === 'settings' && (
               <div className="space-y-6">
+                <div>
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Data de Término
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="date"
+                      id="endDate"
+                      name="endDate"
+                      value={trip.endDate ? new Date(trip.endDate).toISOString().split('T')[0] : ''}
+                      onChange={(e) => onTripChange('endDate', e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-red-800 mb-2">Zona de Perigo</h3>
                   <p className="text-sm text-red-600 mb-4">

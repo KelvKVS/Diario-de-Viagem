@@ -39,7 +39,7 @@ function AppContent() {
         />
       )}
 
-      <main className={`flex-1 bg-gray-50 min-h-screen ${showSidebar ? 'md:ml-20 lg:ml-64' : ''}`}>
+      <main className="flex-1 bg-gray-50 min-h-screen">
         {/* Mobile Header */}
         {showSidebar && (
           <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-10 flex items-center px-4">
