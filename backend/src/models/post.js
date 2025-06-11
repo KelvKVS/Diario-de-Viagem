@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const commentSchema = new mongoose.Schema({
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const postSchema = new mongoose.Schema({
   trip: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,21 +46,7 @@ const postSchema = new mongoose.Schema({
   images: [{
     type: String
   }],
-  comments: [{
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    content: {
-      type: String,
-      required: true
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
+  comments: [commentSchema]
 }, {
   timestamps: true
 });

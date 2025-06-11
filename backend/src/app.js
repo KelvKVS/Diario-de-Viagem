@@ -20,6 +20,7 @@ const postRoutes = require('./routes/postRoutes');
 const tripRoutes = require('./routes/tripRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 const userRoutes = require('./routes/userRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 const corsOptions = {
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
@@ -48,6 +49,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/trips', authMiddleware, tripRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.get('/', (req, res) => {
   res.send('API do Diário de Viagens está funcionando!');

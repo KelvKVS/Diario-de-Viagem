@@ -1,4 +1,7 @@
 const Trip = require('../models/trip');
+const Post = require('../models/post');
+const path = require('path');
+const fs = require('fs').promises;
 
 exports.createTrip = async (req, res) => {
   try {
@@ -210,6 +213,17 @@ exports.deleteTrip = async (req, res) => {
     // Check if user is an admin
     if (!trip.admins.includes(userId)) {
       return res.status(403).json({ error: 'Acesso não autorizado' });
+    }
+
+    // Deletar todos os posts da viagem e suas imagens
+    const posts = await Post.find({ trip: id });
+    for (const post of posts) {
+      if (post.images && post.images.length > 0) {
+        for (const image of post.images) {
+          await fs.unlink(path.join('uploads', image)).catch(() => {});
+        }
+      }
+      await post.remove();
     }
 
     await Trip.findByIdAndDelete(id);

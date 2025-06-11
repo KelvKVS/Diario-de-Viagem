@@ -21,7 +21,7 @@ function TripFeed({ tripId, isMember }) {
   const fetchPosts = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/posts/${tripId}/posts`, {
+      const response = await fetch(`${API_URL}/api/posts/trip/${tripId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

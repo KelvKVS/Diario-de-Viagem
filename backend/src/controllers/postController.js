@@ -182,3 +182,38 @@ exports.getUserPosts = async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar posts do usuário' });
   }
 };
+
+// Get a single post by ID
+exports.getPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await Post.findById(postId)
+      .populate('author', 'name email profilePhoto')
+      .populate('comments.author', 'name email profilePhoto');
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post não encontrado' });
+    }
+
+    // Check if user has access to the post
+    const trip = await Trip.findById(post.trip);
+    if (!trip) {
+      return res.status(404).json({ error: 'Viagem não encontrada' });
+    }
+
+    if (!trip.isPublic && !trip.members.includes(req.user._id)) {
+      return res.status(403).json({ error: 'Acesso não autorizado' });
+    }
+
+    // Add role information to post's author
+    const postObj = post.toObject();
+    const isAdmin = trip.admins.includes(post.author._id);
+    postObj.author.role = isAdmin ? 'Administrador' : 'Membro';
+
+    res.status(200).json(postObj);
+  } catch (error) {
+    console.error('Error getting post:', error);
+    res.status(500).json({ error: 'Erro ao buscar post' });
+  }
+};

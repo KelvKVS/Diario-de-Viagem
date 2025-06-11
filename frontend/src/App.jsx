@@ -57,6 +57,7 @@ function AppContent() {
               {location.pathname === '/explorer' && 'Explorar'}
               {location.pathname === '/profile' && 'Perfil'}
               {location.pathname.startsWith('/trip/') && 'Viagem'}
+              {location.pathname.startsWith('/post/') && 'Postagem'}
             </h1>
           </div>
         )}
