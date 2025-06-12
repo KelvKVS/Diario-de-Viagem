@@ -167,13 +167,6 @@ function Home() {
           <div className="flex-1 order-2 lg:order-1">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900">Últimas Postagens</h2>
-              <button 
-                onClick={handleNewTrip}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Nova Postagem</span>
-              </button>
             </div>
 
             {loading ? (
@@ -186,7 +179,7 @@ function Home() {
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                Nenhum post encontrado. Comece compartilhando suas viagens!
+                Nenhum post encontrado. Comece compartilhando suas viagens!image.png
               </div>
             ) : (
               <div className="space-y-4 md:space-y-6">
@@ -235,13 +228,6 @@ function Home() {
                   ))
                 )}
               </div>
-              <button 
-                onClick={handleNewTrip}
-                className="w-full mt-4 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Map className="w-5 h-5 mr-2" />
-                Nova Viagem
-              </button>
             </div>
           </div>
         </div>
