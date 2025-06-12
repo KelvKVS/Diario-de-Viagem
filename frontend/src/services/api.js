@@ -64,6 +64,17 @@ const apiService = {
   // POST request
   post: (url, data, config) => api.post(url, data, config),
 
+  // POST request para envio de arquivos (multipart/form-data)
+  postForm: (url, formData, config = {}) => {
+    return api.post(url, formData, {
+      ...config,
+      headers: {
+        ...(config && config.headers),
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
   // PUT request
   put: (url, data, config) => api.put(url, data, config),
 

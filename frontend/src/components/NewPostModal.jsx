@@ -26,7 +26,7 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
         formData.append('images', image);
       });
 
-      const response = await apiService.post(`/api/posts/${tripId}/posts`, formData, {
+      const response = await apiService.post(`/api/posts/${tripId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

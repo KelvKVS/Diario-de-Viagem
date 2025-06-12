@@ -15,9 +15,17 @@ exports.createTrip = async (req, res) => {
     const userId = req.user._id;
 
     // Handle image upload
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    
     let coverImage = '';
-    if (req.files && req.files.coverImage && req.files.coverImage[0]) {
-      coverImage = `/uploads/${req.files.coverImage[0].filename}`;
+    if (req.files && req.files.coverImage) {
+      const uploadedFile = req.files.coverImage[0];
+      console.log('Uploaded file details:', uploadedFile);
+      coverImage = `/uploads/${uploadedFile.filename}`;
+      console.log('Cover image path set to:', coverImage);
+    } else {
+      console.log('No cover image uploaded');
     }
 
     const trip = new Trip({

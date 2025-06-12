@@ -73,7 +73,7 @@ function Explorer() {
     const handleCreateTrip = async (formData) => {
         try {
             setCreateError(null);
-            await apiService.post('/api/trips', formData);
+            await apiService.postForm('/api/trips', formData);
             setShowCreateModal(false);
             fetchTrips();
         } catch (err) {
