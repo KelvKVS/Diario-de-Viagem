@@ -45,8 +45,27 @@ function Home() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get(`/api/posts/user/${userData._id}`);
-      setPosts(response);
+      // Primeiro, buscar todas as viagens do usuário
+      const tripsResponse = await apiService.get('/api/trips', {
+        params: {
+          memberId: userData._id
+        }
+      });
+      
+      // Buscar posts de cada viagem
+      const allPosts = [];
+      for (const trip of tripsResponse.trips) {
+        try {
+          const postsResponse = await apiService.get(`/api/posts/trip/${trip._id}`);
+          allPosts.push(...postsResponse);
+        } catch (err) {
+          console.error(`Erro ao buscar posts da viagem ${trip._id}:`, err);
+        }
+      }
+      
+      // Ordenar posts por data de criação (mais recentes primeiro)
+      const sortedPosts = allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setPosts(sortedPosts);
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError('Erro ao carregar posts');
