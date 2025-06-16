@@ -23,12 +23,14 @@ const userRoutes = require('./routes/userRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  credentials: true,
-  maxAge: 86400 // 24 hours
+  origin: [
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+    process.env.CORS_ORIGIN || 'https://diario-de-viagem.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 };
 
 app.use(cors(corsOptions));

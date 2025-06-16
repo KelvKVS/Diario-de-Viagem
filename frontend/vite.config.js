@@ -10,11 +10,21 @@ export default defineConfig({
     tailwindcss()
     ],
   server: {
+    port: process.env.VITE_PORT || 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_URL || 'https://diario-de-viagem-backend.vercel.app',
         changeOrigin: true,
+        secure: true,
+        ws: true
       }
-    }
+    },
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      process.env.VITE_FRONTEND_URL || 'diario-de-viagem.vercel.app',
+      process.env.VITE_BACKEND_URL || 'diario-de-viagem-backend.vercel.app',
+      '.vercel.app'
+    ]
   }
 })
