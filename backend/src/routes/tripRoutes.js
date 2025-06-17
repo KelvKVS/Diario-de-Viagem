@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const tripController = require('../controllers/tripController');
 const authMiddleware = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const { uploadTrip, handleMulterError } = require('../config/multer');
 
 // Create trip with image upload
-router.post('/', authMiddleware, upload, tripController.createTrip);
+router.post('/', authMiddleware, uploadTrip.single('coverImage'), handleMulterError, tripController.createTrip);
 
 // Get all trips
 router.get('/', tripController.getTrips);
@@ -14,7 +14,7 @@ router.get('/', tripController.getTrips);
 router.get('/:id', tripController.getTripById);
 
 // Update trip with image upload
-router.put('/:id', authMiddleware, upload, tripController.updateTrip);
+router.put('/:id', authMiddleware, uploadTrip.single('coverImage'), handleMulterError, tripController.updateTrip);
 
 // Delete trip
 router.delete('/:id', authMiddleware, tripController.deleteTrip);

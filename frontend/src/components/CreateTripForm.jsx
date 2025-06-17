@@ -14,24 +14,25 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsUploading(true);
         
-        const submitData = new FormData();
-        
-        submitData.append('name', formData.name);
-        submitData.append('description', formData.description);
-        submitData.append('isPublic', formData.isPublic);
-        
-        if (formData.coverImage) {
-            console.log('Appending cover image to FormData:', formData.coverImage);
-            submitData.append('coverImage', formData.coverImage);
-        }
+        try {
+            const submitData = new FormData();
+            
+            submitData.append('name', formData.name);
+            submitData.append('description', formData.description);
+            submitData.append('isPublic', formData.isPublic);
+            
+            if (formData.coverImage) {
+                submitData.append('coverImage', formData.coverImage, formData.coverImage.name);
+            }
 
-        // Debug: Log FormData contents
-        for (let pair of submitData.entries()) {
-            console.log(pair[0] + ': ' + pair[1]);
+            await onSubmit(submitData);
+        } catch (error) {
+            console.error('Erro ao criar viagem:', error);
+        } finally {
+            setIsUploading(false);
         }
-
-        onSubmit(submitData);
     };
 
     const handleChange = (e) => {
@@ -44,21 +45,17 @@ const CreateTripForm = ({ onSubmit, onCancel }) => {
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        console.log('Image file selected:', file);
         if (file) {
             if (!file.type.startsWith('image/')) {
-                console.log('Selected file is not an image:', file.type);
                 alert('Por favor, selecione apenas arquivos de imagem.');
                 return;
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                console.log('Image file size exceeds limit:', file.size);
                 alert('A imagem deve ter no máximo 5MB.');
                 return;
             }
 
-            console.log('Valid image file:', file);
             setFormData(prev => ({
                 ...prev,
                 coverImage: file

@@ -212,7 +212,7 @@ const PostDetailsModal = ({ postId, open = true, onClose }) => {
                 {post.images.map((image, index) => (
                   <div key={index} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 group">
                     <img
-                      src={`${apiService.baseURL}/uploads/${image}`}
+                      src={`${apiService.baseURL}${image}`}
                       alt={`Post image ${index + 1}`}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {

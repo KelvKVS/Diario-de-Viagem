@@ -1,54 +1,24 @@
 const Post = require('../models/post');
 const Trip = require('../models/trip');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
-
-// Configure multer for image upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const { AppError } = require('../middleware/errorHandler');
+const PostService = require('../services/postService');
 
 // Create a new post
-exports.createPost = async (req, res) => {
+exports.createPost = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { title, content, type = 'text', location } = req.body;
+    const { title, content, type, location } = req.body;
 
-    // Check if trip exists and user is a member
-    const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ error: 'Viagem não encontrada' });
-    }
+    const post = await PostService.createPost(
+      tripId,
+      req.user._id,
+      { title, content, type, location },
+      req.files
+    );
 
-    if (!trip.members.includes(req.user._id)) {
-      return res.status(403).json({ error: 'Você não é membro desta viagem' });
-    }
-
-    const images = req.files ? req.files.map(file => file.filename) : [];
-
-    const post = new Post({
-      trip: tripId,
-      author: req.user._id,
-      title,
-      content,
-      type,
-      location,
-      images
-    });
-
-    await post.save();
-
-    // Populate author information
-    await post.populate('author', 'name email profilePhoto');
-
-    res.status(201).json({ post });
+    res.status(201).json(post);
   } catch (error) {
     // If there's an error, delete uploaded files
     if (req.files) {
@@ -56,164 +26,69 @@ exports.createPost = async (req, res) => {
         fs.unlink(file.path).catch(console.error)
       ));
     }
-    console.error('Error creating post:', error);
-    res.status(500).json({ error: 'Erro ao criar post' });
+    next(error);
   }
 };
 
 // Get posts for a trip
-exports.getTripPosts = async (req, res) => {
+exports.getTripPosts = async (req, res, next) => {
   try {
     const { tripId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    // Check if trip exists and user has access
-    const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ error: 'Viagem não encontrada' });
-    }
-
-    if (!trip.isPublic && !trip.members.includes(req.user._id)) {
-      return res.status(403).json({ error: 'Acesso não autorizado' });
-    }
-
-    const posts = await Post.find({ trip: tripId })
-      .populate({
-        path: 'author',
-        select: 'name email profilePhoto'
-      })
-      .populate({
-        path: 'comments.author',
-        select: 'name email profilePhoto'
-      })
-      .sort({ createdAt: -1 });
-
-    // Add role information to each post's author
-    const postsWithRoles = posts.map(post => {
-      const postObj = post.toObject();
-      const isAdmin = trip.admins.includes(post.author._id);
-      postObj.author.role = isAdmin ? 'Administrador' : 'Membro';
-      return postObj;
-    });
-
-    res.status(200).json(postsWithRoles);
+    const result = await PostService.getTripPosts(tripId, req.user._id, page, limit);
+    res.status(200).json(result);
   } catch (error) {
-    console.error('Error getting posts:', error);
-    res.status(500).json({ error: 'Erro ao buscar posts' });
+    next(error);
   }
 };
 
 // Add a comment to a post
-exports.addComment = async (req, res) => {
+exports.addComment = async (req, res, next) => {
   try {
     const { postId } = req.params;
     const { content } = req.body;
 
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: 'Post não encontrado' });
-    }
-
-    // Check if user is a member of the trip
-    const trip = await Trip.findById(post.trip);
-    if (!trip.members.includes(req.user._id)) {
-      return res.status(403).json({ error: 'Você não é membro desta viagem' });
-    }
-
-    post.comments.push({
-      author: req.user._id,
-      content
-    });
-
-    await post.save();
-    await post.populate('comments.author', 'name email profilePhoto');
-
+    const post = await PostService.addComment(postId, req.user._id, content);
     res.status(200).json(post);
   } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ error: 'Erro ao adicionar comentário' });
+    next(error);
   }
 };
 
 // Delete a post
-exports.deletePost = async (req, res) => {
+exports.deletePost = async (req, res, next) => {
   try {
     const { postId } = req.params;
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: 'Post não encontrado' });
-    }
-
-    // Check if user is the author or an admin of the trip
-    const trip = await Trip.findById(post.trip);
-    if (post.author.toString() !== req.user._id.toString() && 
-        !trip.admins.includes(req.user._id)) {
-      return res.status(403).json({ error: 'Não autorizado a deletar este post' });
-    }
-
-    // Delete associated images
-    if (post.images && post.images.length > 0) {
-      await Promise.all(post.images.map(image => 
-        fs.unlink(path.join('uploads', image)).catch(console.error)
-      ));
-    }
-
-    await post.remove();
-    res.status(200).json({ message: 'Post deletado com sucesso' });
+    await PostService.deletePost(postId, req.user._id);
+    res.status(204).send();
   } catch (error) {
-    console.error('Error deleting post:', error);
-    res.status(500).json({ error: 'Erro ao deletar post' });
+    next(error);
   }
 };
 
 // Get posts by user
-exports.getUserPosts = async (req, res) => {
+exports.getUserPosts = async (req, res, next) => {
   try {
     const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    const posts = await Post.find({ author: userId })
-      .populate('author', 'name email profilePhoto')
-      .populate('comments.author', 'name email profilePhoto')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json(posts);
+    const result = await PostService.getUserPosts(userId, page, limit);
+    res.status(200).json(result);
   } catch (error) {
-    console.error('Error getting user posts:', error);
-    res.status(500).json({ error: 'Erro ao buscar posts do usuário' });
+    next(error);
   }
 };
 
 // Get a single post by ID
-exports.getPost = async (req, res) => {
+exports.getPost = async (req, res, next) => {
   try {
     const { postId } = req.params;
-
-    const post = await Post.findById(postId)
-      .populate('author', 'name email profilePhoto')
-      .populate('comments.author', 'name email profilePhoto');
-
-    if (!post) {
-      return res.status(404).json({ error: 'Post não encontrado' });
-    }
-
-    // Check if user has access to the post
-    const trip = await Trip.findById(post.trip);
-    if (!trip) {
-      return res.status(404).json({ error: 'Viagem não encontrada' });
-    }
-
-    if (!trip.isPublic && !trip.members.includes(req.user._id)) {
-      return res.status(403).json({ error: 'Acesso não autorizado' });
-    }
-
-    // Add role information to post's author
-    const postObj = post.toObject();
-    const isAdmin = trip.admins.includes(post.author._id);
-    postObj.author.role = isAdmin ? 'Administrador' : 'Membro';
-
-    res.status(200).json(postObj);
+    const post = await PostService.getPost(postId, req.user._id);
+    res.status(200).json(post);
   } catch (error) {
-    console.error('Error getting post:', error);
-    res.status(500).json({ error: 'Erro ao buscar post' });
+    next(error);
   }
 };

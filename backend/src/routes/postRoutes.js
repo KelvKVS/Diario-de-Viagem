@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
 const authMiddleware = require('../middleware/authMiddleware');
-const postUpload = require('../middleware/postUploadMiddleware');
+const { uploadPost, handleMulterError } = require('../config/multer');
 
 // Get a single post
 router.get('/:postId', authMiddleware, postController.getPost);
@@ -11,7 +11,7 @@ router.get('/:postId', authMiddleware, postController.getPost);
 router.get('/trip/:tripId', authMiddleware, postController.getTripPosts);
 
 // Create a new post
-router.post('/:tripId', authMiddleware, postUpload, postController.createPost);
+router.post('/:tripId', authMiddleware, uploadPost.array('images', 5), handleMulterError, postController.createPost);
 
 // Add a comment to a post
 router.post('/:postId/comments', authMiddleware, postController.addComment);

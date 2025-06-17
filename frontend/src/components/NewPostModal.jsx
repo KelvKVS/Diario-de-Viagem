@@ -32,10 +32,11 @@ function NewPostModal({ show, onClose, tripId, onPostCreated }) {
         }
       });
 
-      onPostCreated(response.post);
+      onPostCreated(response);
       onClose();
       resetForm();
     } catch (err) {
+      console.error('Erro ao criar post:', err);
       setError(err.message || 'Erro ao criar post');
     } finally {
       setLoading(false);

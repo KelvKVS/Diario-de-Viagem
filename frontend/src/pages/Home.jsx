@@ -57,7 +57,9 @@ function Home() {
       for (const trip of tripsResponse.trips) {
         try {
           const postsResponse = await apiService.get(`/api/posts/trip/${trip._id}`);
-          allPosts.push(...postsResponse);
+          // Verificar se postsResponse tem a propriedade posts
+          const tripPosts = Array.isArray(postsResponse) ? postsResponse : postsResponse.posts || [];
+          allPosts.push(...tripPosts);
         } catch (err) {
           console.error(`Erro ao buscar posts da viagem ${trip._id}:`, err);
         }

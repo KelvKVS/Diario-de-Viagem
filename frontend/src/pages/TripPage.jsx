@@ -36,7 +36,9 @@ function TripPage() {
   const formatDateForDisplay = (date) => {
     if (!date) return '';
     try {
-      return new Date(date).toISOString().split('T')[0];
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) return '';
+      return dateObj.toLocaleDateString('pt-BR');
     } catch (e) {
       console.error('Error formatting date:', e);
       return '';
@@ -46,7 +48,9 @@ function TripPage() {
   const formatDateForAPI = (date) => {
     if (!date) return null;
     try {
-      return new Date(date).toISOString();
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) return null;
+      return dateObj.toISOString();
     } catch (e) {
       console.error('Error formatting date for API:', e);
       return null;
@@ -56,11 +60,10 @@ function TripPage() {
   const fetchTripDetails = async () => {
     try {
       const response = await apiService.get(`/api/trips/${tripId}`);
-      // Format dates for display
       const formattedTrip = {
         ...response,
-        startDate: formatDateForDisplay(response.startDate),
-        endDate: formatDateForDisplay(response.endDate)
+        startDate: response.startDate ? new Date(response.startDate) : null,
+        endDate: response.endDate ? new Date(response.endDate) : null
       };
       setTrip(formattedTrip);
       
@@ -79,19 +82,17 @@ function TripPage() {
     setSaving(true);
     setError(null);
     try {
-      // Format dates for API
       const tripData = {
         ...trip,
-        startDate: formatDateForAPI(trip.startDate),
+        startDate: trip.startDate ? formatDateForAPI(trip.startDate) : null,
         endDate: trip.endDate ? formatDateForAPI(trip.endDate) : null
       };
 
       const response = await apiService.put(`/api/trips/${tripId}`, tripData);
-      // Format dates for display
       const formattedTrip = {
         ...response,
-        startDate: formatDateForDisplay(response.startDate),
-        endDate: formatDateForDisplay(response.endDate)
+        startDate: response.startDate ? new Date(response.startDate) : null,
+        endDate: response.endDate ? new Date(response.endDate) : null
       };
       setTrip(formattedTrip);
       setIsAdminPanelOpen(false);
@@ -150,6 +151,11 @@ function TripPage() {
 
   const handleSearchUsers = async (query) => {
     if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (query.trim().length < 2) {
       setSearchResults([]);
       return;
     }
@@ -313,7 +319,7 @@ function TripPage() {
                   <div>
                     <p className="text-sm text-gray-500">Data</p>
                     <p className="font-medium">
-                      {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                      {trip.startDate ? formatDateForDisplay(trip.startDate) : 'Não definida'} - {trip.endDate ? formatDateForDisplay(trip.endDate) : 'Não definida'}
                     </p>
                   </div>
                 </div>
@@ -515,7 +521,11 @@ function TripPage() {
                 </div>
               ))
             ) : searchQuery ? (
-              <p className="text-center text-gray-500 py-4">Nenhum usuário encontrado</p>
+              searchQuery.trim().length < 2 ? (
+                <p className="text-center text-gray-500 py-4">Digite pelo menos 2 caracteres para buscar</p>
+              ) : (
+                <p className="text-center text-gray-500 py-4">Nenhum usuário encontrado</p>
+              )
             ) : null}
           </div>
         </div>

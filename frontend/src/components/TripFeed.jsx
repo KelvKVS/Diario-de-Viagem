@@ -21,6 +21,7 @@ function TripFeed({ tripId, isMember }) {
   const fetchPosts = async () => {
     try {
       const token = localStorage.getItem('authToken');
+      
       const response = await fetch(`${API_URL}/api/posts/trip/${tripId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -32,9 +33,14 @@ function TripFeed({ tripId, isMember }) {
       }
 
       const data = await response.json();
-      const sortedPosts = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      const postsArray = Array.isArray(data) ? data : data.posts || [];
+      
+      const sortedPosts = postsArray.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
       setPosts(sortedPosts);
     } catch (err) {
+      console.error('Erro ao buscar posts:', err);
       setError(err.message);
       showToast(err.message, 'error');
     } finally {
@@ -103,9 +109,9 @@ function TripFeed({ tripId, isMember }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+          {posts.map((post) => {
+            return <PostCard key={post._id} post={post} />;
+          })}
         </div>
       )}
 
