@@ -1,0 +1,701 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  User, 
+  Users, 
+  UserPlus, 
+  Bell, 
+  Image as ImageIcon,
+  Pencil,
+  MapPin,
+  Mail,
+  UserCircle,
+  Check,
+  X,
+  Search,
+  Plus,
+  Camera
+} from 'lucide-react';
+import apiService from '../services/api';
+import Modal from '../components/Modal';
+import Toast from '../components/Toast';
+import PostCard from '../components/PostCard';
+import FormField from '../components/FormField';
+
+const Profile = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('profile');
+  const [friends, setFriends] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    bio: '',
+    location: ''
+  });
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [userPosts, setUserPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+
+  useEffect(() => {
+    const verifyAuth = async () => {
+      try {
+        const response = await apiService.get('/api/auth/verify-token');
+        if (response.valid) {
+          setUserId(response.user._id);
+          setUserData(response.user);
+        } else {
+          apiService.clearAuth();
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error verifying token:', error);
+        apiService.clearAuth();
+        navigate('/');
+      }
+    };
+
+    verifyAuth();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchFriends();
+      fetchFriendRequests();
+      fetchUserPosts();
+    }
+  }, [userId]);
+
+  const fetchFriends = async () => {
+    try {
+      const response = await apiService.get(`/api/users/friends/${userId}`);
+      setFriends(response);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      showToast('Erro ao carregar amigos', 'error');
+    }
+  };
+
+  const fetchFriendRequests = async () => {
+    try {
+      const response = await apiService.get(`/api/users/requests/${userId}`);
+      setFriendRequests(response);
+    } catch (error) {
+      console.error('Error fetching friend requests:', error);
+      showToast('Erro ao carregar solicitações', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserPosts = async () => {
+    try {
+      setPostsLoading(true);
+      const response = await apiService.get(`/api/posts/user/${userId}`);
+      setUserPosts(response);
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+      showToast('Erro ao carregar posts', 'error');
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async (requestId) => {
+    try {
+      await apiService.post('/api/users/accept-request', {
+        userId,
+        friendId: requestId
+      });
+      fetchFriendRequests();
+      fetchFriends();
+      showToast('Solicitação aceita com sucesso!');
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      showToast('Erro ao aceitar solicitação', 'error');
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await apiService.post('/api/users/reject-request', {
+        userId,
+        friendId: requestId
+      });
+      fetchFriendRequests();
+      showToast('Solicitação rejeitada');
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      showToast('Erro ao rejeitar solicitação', 'error');
+    }
+  };
+
+  const handleSendRequest = async (targetUserId) => {
+    try {
+      await apiService.post('/api/users/send-request', {
+        friendId: targetUserId
+      });
+      setSearchResults(prevResults => 
+        prevResults.filter(user => user._id !== targetUserId)
+      );
+      showToast('Solicitação enviada com sucesso!');
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      showToast(error.message || 'Erro ao enviar solicitação', 'error');
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setSearchLoading(true);
+    try {
+      const response = await apiService.get(`/api/users/search`, {
+        params: { q: searchQuery }
+      });
+      setSearchResults(response);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      showToast('Erro ao buscar usuários', 'error');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfilePhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+        setShowPreviewModal(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'success' });
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!profilePhoto) return;
+
+    setUploadLoading(true);
+    const formData = new FormData();
+    formData.append('profilePhoto', profilePhoto);
+
+    try {
+      const response = await apiService.post('/api/users/profile-photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.user) {
+        setUserData(prev => ({
+          ...prev,
+          ...response.user
+        }));
+      }
+      setProfilePhoto(null);
+      setPreviewUrl(null);
+      setShowPreviewModal(false);
+      showToast('Foto de perfil atualizada com sucesso!');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      showToast(error.message || 'Erro ao fazer upload da foto', 'error');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await apiService.put('/api/users/profile', formData);
+      setUserData(response);
+      setEditMode(false);
+      showToast('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showToast(error.message || 'Erro ao atualizar perfil', 'error');
+    }
+  };
+
+  const getProfilePhotoUrl = (photoPath) => {
+    if (!photoPath) return '/default-avatar.png';
+    if (photoPath.startsWith('http')) return photoPath;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    return `${baseUrl}${photoPath}`;
+  };
+
+  if (!userId || loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="relative mb-8">
+        <div className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-lg"></div>
+        <div className="absolute -bottom-16 left-8">
+          <div className="relative group">
+            <div className="relative w-32 h-32">
+              <img
+                src={getProfilePhotoUrl(userData?.profilePhoto)}
+                alt={userData?.name}
+                className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/default-avatar.png';
+                }}
+              />
+              <div className="absolute inset-0 group-hover:bg-black/40 rounded-full transition-all duration-200 flex items-center justify-center">
+                <label 
+                  htmlFor="photo-upload" 
+                  className="opacity-0 group-hover:opacity-100 cursor-pointer p-2 bg-white/90 text-gray-800 rounded-full hover:bg-white transition-opacity duration-200"
+                >
+                  <Camera className="h-6 w-6" />
+                </label>
+              </div>
+            </div>
+            <input
+              id="photo-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{userData?.name}</h1>
+                <p className="text-gray-600 flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  {userData?.email}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditMode(true)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title="Editar perfil"
+              >
+                <Pencil className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <UserCircle className="w-4 h-4" />
+                  Bio
+                </h3>
+                <p className="mt-1 text-gray-700">{userData?.bio || 'Nenhuma bio adicionada'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Localização
+                </h3>
+                <p className="mt-1 text-gray-700">{userData?.location || 'Não especificada'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Amigos
+              </h2>
+              <button
+                onClick={() => setShowAddFriendModal(true)}
+                className="text-blue-500 hover:text-blue-600 flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Adicionar</span>
+              </button>
+            </div>
+            <div className="space-y-3">
+              {friends.slice(0, 5).map((friend) => (
+                <div
+                  key={friend._id}
+                  className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getProfilePhotoUrl(friend.profilePhoto)}
+                      alt={friend.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
+                    />
+                    <div>
+                      <h3 className="font-medium text-sm">{friend.name}</h3>
+                      <p className="text-gray-500 text-xs flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span>Amigo</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/profile/${friend._id}`)}
+                    className="text-blue-500 hover:text-blue-600"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {friends.length > 5 && (
+                <button
+                  onClick={() => setActiveTab('friends')}
+                  className="w-full text-center text-blue-500 hover:text-blue-600 text-sm py-2"
+                >
+                  Ver todos os {friends.length} amigos
+                </button>
+              )}
+            </div>
+          </div>
+
+          {friendRequests.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                Solicitações de Amizade
+              </h2>
+              <div className="space-y-3">
+                {friendRequests.map((request) => (
+                  <div
+                    key={request._id}
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={getProfilePhotoUrl(request.profilePhoto)}
+                        alt={request.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/default-avatar.png';
+                        }}
+                      />
+                      <div>
+                        <h3 className="font-medium text-sm">{request.name}</h3>
+                        <p className="text-gray-500 text-xs flex items-center gap-1">
+                          <UserPlus className="w-3 h-3" />
+                          <span>Solicitação pendente</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAcceptRequest(request._id)}
+                        className="p-1 text-green-500 hover:text-green-600"
+                        title="Aceitar"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRejectRequest(request._id)}
+                        className="p-1 text-red-500 hover:text-red-600"
+                        title="Recusar"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Meus Posts
+            </h2>
+            {postsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : userPosts.length > 0 ? (
+              <div className="space-y-6">
+                {userPosts.map((post) => (
+                  <PostCard key={post._id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                Você ainda não tem posts publicados
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Modal
+        show={editMode}
+        onClose={() => setEditMode(false)}
+        title="Editar Perfil"
+      >
+        <div className="p-6">
+          <form onSubmit={handleProfileUpdate} className="space-y-6">
+            <div className="space-y-4">
+              <FormField
+                label="Nome"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                placeholder="Seu nome completo"
+                icon={<User className="w-5 h-5 text-gray-400" />}
+                maxLength={50}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FormField
+                label="Bio"
+                name="bio"
+                type="textarea"
+                value={formData.bio}
+                onChange={handleInputChange}
+                rows="4"
+                placeholder="Conte um pouco sobre você..."
+                icon={<UserCircle className="w-5 h-5 text-gray-400" />}
+                maxLength={200}
+                className="w-full resize-none"
+              />
+              <p className="text-sm text-gray-500 text-right">
+                {formData.bio.length}/200 caracteres
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <FormField
+                label="Localização"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Sua cidade, país"
+                icon={<MapPin className="w-5 h-5 text-gray-400" />}
+                maxLength={100}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setEditMode(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors duration-200"
+              >
+                <X className="w-5 h-5" />
+                <span>Cancelar</span>
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!formData.name.trim()}
+              >
+                <Check className="w-5 h-5" />
+                <span>Salvar Alterações</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      <Modal
+        show={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setProfilePhoto(null);
+          setPreviewUrl(null);
+        }}
+        title="Preview da Foto"
+      >
+        <div className="p-4">
+          <div className="relative aspect-square w-full mb-4">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-full object-contain rounded-lg"
+            />
+          </div>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => {
+                setShowPreviewModal(false);
+                setProfilePhoto(null);
+                setPreviewUrl(null);
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handlePhotoUpload}
+              disabled={uploadLoading}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+            >
+              {uploadLoading ? 'Enviando...' : 'Confirmar e Enviar'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        show={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="Configurações da Conta"
+      >
+        <div className="p-4">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Preferências de Notificação</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>Notificações de Amizade</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Notificações de Comentários</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        show={showAddFriendModal}
+        onClose={() => setShowAddFriendModal(false)}
+        title="Adicionar Amigos"
+      >
+        <div className="p-4">
+          <form onSubmit={handleSearch} className="space-y-4">
+            <FormField
+              label="Buscar por nome ou email"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Digite o nome ou email..."
+              icon={<Search className="w-5 h-5 text-gray-400" />}
+            />
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2"
+            >
+              <Search className="w-5 h-5" />
+              <span>Buscar</span>
+            </button>
+          </form>
+
+          {searchLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-4">
+              {searchResults.map((user) => (
+                <div
+                  key={user._id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={getProfilePhotoUrl(user.profilePhoto)}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
+                    />
+                    <div>
+                      <h4 className="font-medium">{user.name}</h4>
+                      <p className="text-sm text-gray-500 flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleSendRequest(user._id)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+              ))}
+              {searchResults.length === 0 && searchQuery && (
+                <p className="text-center text-gray-500 py-4">
+                  Nenhum usuário encontrado
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Profile; 

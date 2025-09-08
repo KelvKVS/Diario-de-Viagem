@@ -1,49 +1,98 @@
-const Trip = require('../models/trip');
+const TripService = require('../services/tripService');
+const { AppError } = require('../middleware/errorHandler');
+const path = require('path');
+const fs = require('fs').promises;
 
-exports.createTrip = async (req, res) => {
+exports.createTrip = async (req, res, next) => {
   try {
-    const { name, isPublic, members } = req.body;
-
-    if (!name || !Array.isArray(members) || members.length === 0) {
-      return res.status(400).json({ error: 'Nome e pelo menos um membro são obrigatórios' });
+    if (!req.user || !req.user._id) {
+      throw new AppError('Usuário não autenticado', 401);
     }
 
-    const trip = await Trip.create({
-      name,
-      isPublic: isPublic ?? true,
-      members,
-    });
+    const trip = await TripService.createTrip(
+      req.user._id,
+      req.body,
+      req.file
+    );
 
     res.status(201).json(trip);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao criar trip', details: err.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-exports.getTrips = async (req, res) => {
+exports.getTripById = async (req, res, next) => {
   try {
-    const trips = await Trip.find().populate('members', 'name email');
-    res.status(200).json(trips);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar trips', details: err.message });
-  }
-};
-
-exports.addMember = async (req, res) => {
-  try {
-    const { tripId } = req.params;
-    const { userId } = req.body;
-
-    const trip = await Trip.findById(tripId);
-    if (!trip) return res.status(404).json({ error: 'Trip não encontrada' });
-
-    if (!trip.members.includes(userId)) {
-      trip.members.push(userId);
-      await trip.save();
-    }
-
+    const trip = await TripService.getTripById(req.params.id, req.userId);
     res.status(200).json(trip);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao adicionar membro', details: err.message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUserTrips = async (req, res, next) => {
+  try {
+    const trips = await TripService.getUserTrips(req.userId);
+    res.status(200).json(trips);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getTrips = async (req, res, next) => {
+  try {
+    const result = await TripService.getTrips(req.query);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateTrip = async (req, res, next) => {
+  try {
+    const updatedTrip = await TripService.updateTrip(
+      req.params.id,
+      req.user._id,
+      req.body,
+      req.file
+    );
+    res.status(200).json(updatedTrip);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteTrip = async (req, res, next) => {
+  try {
+    await TripService.deleteTrip(req.params.id, req.user._id);
+    res.status(200).json({ message: 'Viagem excluída com sucesso' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addMember = async (req, res, next) => {
+  try {
+    const trip = await TripService.addMember(
+      req.params.id,
+      req.user._id,
+      req.body.userId
+    );
+    res.status(200).json(trip);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.removeMember = async (req, res, next) => {
+  try {
+    const trip = await TripService.removeMember(
+      req.params.id,
+      req.user._id,
+      req.params.memberId
+    );
+    res.status(200).json(trip);
+  } catch (error) {
+    next(error);
   }
 };

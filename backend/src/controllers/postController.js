@@ -1,49 +1,94 @@
-const post = require('../models/posts.js');
+const Post = require('../models/post');
+const Trip = require('../models/trip');
+const path = require('path');
+const fs = require('fs').promises;
+const { AppError } = require('../middleware/errorHandler');
+const PostService = require('../services/postService');
 
-exports.getposts = async (req, res) => {
+// Create a new post
+exports.createPost = async (req, res, next) => {
   try {
-    const { local, inicio, fim } = req.query;
+    const { tripId } = req.params;
+    const { title, content, type, location } = req.body;
 
-    const filtros = {};
+    const post = await PostService.createPost(
+      tripId,
+      req.user._id,
+      { title, content, type, location },
+      req.files
+    );
 
-    if (local) {
-      filtros.location = new RegExp(local, 'i');
+    res.status(201).json(post);
+  } catch (error) {
+    // If there's an error, delete uploaded files
+    if (req.files) {
+      await Promise.all(req.files.map(file => 
+        fs.unlink(file.path).catch(console.error)
+      ));
     }
-
-    if (inicio || fim) {
-      filtros.date = {};
-
-      if (inicio && !isNaN(new Date(inicio).getTime())) {
-        filtros.date.$gte = new Date(inicio);
-      }
-
-      if (fim && !isNaN(new Date(fim).getTime())) {
-        filtros.date.$lte = new Date(fim);
-      }
-
-      if (Object.keys(filtros.date).length === 0) {
-        delete filtros.date;
-      }
-    }
-
-    const posts = await post.find(filtros).populate('usuario');
-    res.status(200).json(posts);
-  } catch (err) {
-    res.status(500).json({ erro: 'Erro ao buscar viagens', detalhes: err });
+    next(error);
   }
 };
 
-exports.createPost = async (req, res) => {
+// Get posts for a trip
+exports.getTripPosts = async (req, res, next) => {
   try {
-    const dadosPost = req.body;
+    const { tripId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    if (!dadosPost.usuario) {
-      return res.status(400).json({ erro: 'Usuário é obrigatório' });
-    }
+    const result = await PostService.getTripPosts(tripId, req.user._id, page, limit);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const novoPost = await post.create(dadosPost);
-    res.status(201).json(novoPost);
-  } catch (err) {
-    res.status(400).json({ erro: 'Erro ao criar post', detalhes: err.message });
+// Add a comment to a post
+exports.addComment = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+    const { content } = req.body;
+
+    const post = await PostService.addComment(postId, req.user._id, content);
+    res.status(200).json(post);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete a post
+exports.deletePost = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+    await PostService.deletePost(postId, req.user._id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get posts by user
+exports.getUserPosts = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const result = await PostService.getUserPosts(userId, page, limit);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a single post by ID
+exports.getPost = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+    const post = await PostService.getPost(postId, req.user._id);
+    res.status(200).json(post);
+  } catch (error) {
+    next(error);
   }
 };

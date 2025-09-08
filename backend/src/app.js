@@ -1,26 +1,38 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
-const viagemRoutes = require('./routes/postRoutes');
-const userRoutes = require('./routes/userRoutes');
-const app = express();
-const port = 3000;
-const tripRoutes = require('./routes/tripRoutes');
+const path = require('path');
+require('dotenv').config();
 
-app.use(cors());
+const connectDB = require('./config/database');
+const corsOptions = require('./config/cors');
+const setupUploadsDir = require('./config/uploads');
+const { errorHandler } = require('./middleware/errorHandler');
+const routes = require('./routes');
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Configurar diretório de uploads
+const uploadsDir = setupUploadsDir();
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
-mongoose.connect('mongodb://localhost:27017/diarioViagem', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ MongoDB conectado'))
-.catch(err => console.error('❌ Erro no MongoDB:', err));
+// Servir arquivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/', viagemRoutes);
-app.use('/', userRoutes);
-app.use('/', tripRoutes);
+// Conectar ao banco de dados
+connectDB();
+
+// Rotas
+app.use('/api', routes);
+
+// Middleware de tratamento de erros
+app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
+
+module.exports = app;

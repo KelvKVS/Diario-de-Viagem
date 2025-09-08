@@ -1,51 +1,46 @@
-const Usuario = require('../models/user');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const AuthService = require('../services/authService');
 
-const SECRET = 'your_jwt_secret';
-
-exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
-
+exports.register = async (req, res, next) => {
   try {
-    const existingUser = await Usuario.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Usuário já existe' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const novoUsuario = new Usuario({
-      name,
-      email,
-      password: hashedPassword
-    });
-
-    await novoUsuario.save();
-    res.status(201).json({ message: 'Usuário registrado com sucesso' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro no registro' });
+    const result = await AuthService.register(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
   }
 };
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
+exports.login = async (req, res, next) => {
   try {
-    const usuario = await Usuario.findOne({ email });
-    if (!usuario) {
-      return res.status(404).json({ message: 'Usuário não encontrado' });
-    }
+    const result = await AuthService.login(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const senhaCorreta = await bcrypt.compare(password, usuario.password);
-    if (!senhaCorreta) {
-      return res.status(401).json({ message: 'Senha incorreta' });
-    }
+exports.logout = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    const result = await AuthService.logout(token);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const token = jwt.sign({ userId: usuario._id }, SECRET, { expiresIn: '1h' });
+exports.isTokenBlacklisted = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (AuthService.isTokenBlacklisted(token)) {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  next();
+};
 
-    res.status(200).json({ token });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro no login' });
+exports.verifyToken = async (req, res, next) => {
+  try {
+    const result = await AuthService.verifyToken(req.userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
   }
 };

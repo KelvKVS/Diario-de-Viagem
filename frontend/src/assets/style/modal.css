@@ -1,0 +1,122 @@
+/* src/style/Modal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo escuro semi-transparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Garante que o modal fique acima de tudo */
+}
+
+.modal-content {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  width: 90%; /* Largura padrão */
+  max-width: 450px; /* Largura máxima para desktop */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee; /* Linha divisória */
+  padding-bottom: 15px;
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #888;
+  cursor: pointer;
+  padding: 0; /* Remove padding padrão do botão */
+  line-height: 1; /* Alinha o 'x' verticalmente */
+  transition: color 0.2s ease;
+}
+
+.modal-close-button:hover {
+  color: #333;
+}
+
+.modal-body {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end; /* Alinha os botões à direita */
+  gap: 15px; /* Espaço entre os botões */
+  padding-top: 15px;
+  border-top: 1px solid #eee; /* Linha divisória */
+}
+
+/* Estilos básicos para botões no modal (se você não usar Bootstrap ou Tailwind) */
+.modal-footer button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.modal-footer .button-cancel {
+  background-color: #f0f0f0;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.modal-footer .button-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.modal-footer .button-confirm {
+  background-color: #007bff; /* Azul Bootstrap */
+  color: white;
+  border: 1px solid #007bff;
+}
+
+.modal-footer .button-confirm:hover {
+  background-color: #0056b3;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+  .modal-title {
+    font-size: 1.2rem;
+  }
+  .modal-close-button {
+    font-size: 1.5rem;
+  }
+  .modal-footer {
+    flex-direction: column; /* Empilha botões em telas pequenas */
+    gap: 10px;
+  }
+  .modal-footer button {
+    width: 100%; /* Botões ocupam a largura total */
+  }
+}
